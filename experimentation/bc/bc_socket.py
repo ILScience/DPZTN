@@ -63,8 +63,12 @@ def gateway_main():
                     # 每次使用aes_key使用sk,pk重新生成
                     # 上传result
 
+                # 如果接收到用户注册请求
                 elif request_type == b"USER REGISTRATION":
                     user_register()
+
+
+
 
             except Exception as e:
                 pass

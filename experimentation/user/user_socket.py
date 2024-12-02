@@ -60,7 +60,7 @@ def decrypt_and_verify_data(client_socket, ecc, client_private_key, server_publi
 
 
 # 网关身份注册流程
-def gw_register(client_socket, ecc, client_hash_info, server_pk_sig):
+def user_register(client_socket, ecc, client_hash_info, server_pk_sig):
     format_and_print('2.Starting the Identity Enrollment Process', ':', 'left')
     try:
         # 获取注册过程中使用的公钥
@@ -84,7 +84,7 @@ def gw_register(client_socket, ecc, client_hash_info, server_pk_sig):
 
 def user_main():
     try:
-        uinfo = user_info_generate()
+        user_hash_info = user_info_generate()
         user_sk, user_pk, user_sk_sig, user_pk_sig, ecc = user_key()
 
         user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # 创建 socket 对象
@@ -93,12 +93,16 @@ def user_main():
         format_and_print(f"Connected to blockchain server at {gateway_ip}:{gateway_port} from {user_ip}:{user_port}",
                          '.', 'left')
         # 交换公钥
-        bc_pk, bc_pk_sig, tt1, tt2, exchange_key_duration = pk_exchange(user_socket, user_pk, user_pk_sig)
+        gateway_pk, gateway_pk_sig, tt1, tt2, exchange_key_duration = pk_exchange(user_socket, user_pk, user_pk_sig)
         time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
 
         # 网关注册
         register_start_time = get_timestamp()
-        gid, reg_result, tt3 = user_register(user_socket, ecc, user_hash_info, gateway_pk_sig)
+        uid, reg_result, tt3 = user_register(user_socket, ecc, user_hash_info, gateway_pk_sig)
+        register_end_time = get_timestamp()
+        user_register_time = register_end_time - register_start_time
+        append_to_json(uid, time_dict1)
+
 
     except Exception as e:
         print(e)
