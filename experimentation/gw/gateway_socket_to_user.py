@@ -32,13 +32,9 @@ def user_main():
                     request_start_time = get_timestamp()
                     format_and_print(f'Received message type: {request_type}', '-', 'center')
                     if request_type == b"USER REGISTRATION":
-                        user_register()
+                        user_register(user_socket, ecc1, aes_key, gid, gateway_socket)
                         register_end_time = get_timestamp()
                         user_register_time = register_end_time - request_start_time
-
-                    elif request_type == b"USER AUTHENTICATION":
-
-                    elif request_type == b"ACCESS":
 
                 except Exception as e:
                     print(e)

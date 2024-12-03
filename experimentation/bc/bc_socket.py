@@ -5,6 +5,7 @@ from zerotrustnetworkelement.blockchain.connection import *
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.blockchain.bc_configure import *
 from zerotrustnetworkelement.blockchain.bc_function import *
+from zerotrustnetworkelement.blockchain.user_register import *
 
 '''
 时间复杂度：
