@@ -2,6 +2,7 @@ from zerotrustnetworkelement.gateway.exchange_key_with_bc import *
 from zerotrustnetworkelement.gateway.gw_info import *
 from zerotrustnetworkelement.gateway.gw_register import *
 from zerotrustnetworkelement.gateway.gw_auth import *
+from gateway_socket_to_user import *
 import socket
 from zerotrustnetworkelement.gateway.gw_configure import *
 
@@ -28,7 +29,7 @@ def gateway_main():
         format_and_print(f"Connected to blockchain server at {bc_ip}:{bc_port} from {gw_ip}:{gw_port}", '.', 'left')
 
         # 交换公钥
-        bc_pk, bc_pk_sig, tt1, tt2, exchange_key_duration = pk_exchange(gw_socket, gw_pk, gw_pk_sig)
+        bc_pk, bc_pk_sig, tt1, tt2, exchange_key_duration = bc_pk_exchange(gw_socket, gw_pk, gw_pk_sig)
         time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
 
         # 网关注册
@@ -52,8 +53,8 @@ def gateway_main():
 
             if auth_result:
                 format_and_print('3.Successful authentication', "=", "center")
-                # 开启用户程序
-                # user_main()
+                return auth_result, gid, gw_socket
+
 
             else:
                 format_and_print('3.Authentication failure', chr(0x00D7), "center")
@@ -61,12 +62,38 @@ def gateway_main():
         else:
             format_and_print('2.Identity registration failure', chr(0x00D7), "center")
 
-    except Exception as e:
-        print(e)
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
+def user_main_zl(auth_result, gid, gateway_socket):
+    try:
+        if auth_result:
+            user_main(gid, gateway_socket)
+        else:
+            print('gateway auth failed!')
 
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 if __name__ == '__main__':
-    gateway_main()
+    auth_result, gid, gw_socket = gateway_main()
+    user_main_zl(auth_result, gid, gw_socket)

@@ -9,7 +9,7 @@ from zerotrustnetworkelement.function import *
 def user_main():
     try:
         user_hash_info = user_info_generate()
-        user_sk, user_pk, user_sk_sig, user_pk_sig, ecc = user_key()
+        user_sk, user_pk, user_sk_sig, user_pk_sig, ecc1 = user_key()
 
         user_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # 创建 socket 对象
         user_socket.bind((user_ip, user_port))  # 绑定ip,port
@@ -22,10 +22,10 @@ def user_main():
 
         # 网关注册
         register_start_time = get_timestamp()
-        uid, tt_u1, tt_b1 = user_register(user_socket, ecc, user_hash_info, gateway_pk_sig)
+        uid, tt3, tt4 = user_register(user_socket, ecc1, user_hash_info, gateway_pk_sig)
         register_end_time = get_timestamp()
         user_register_time = register_end_time - register_start_time
-        time_dict2 = {'tt_u1': tt_u1, 'tt_b1': tt_b1, 'user_register_time': user_register_time}
+        time_dict2 = {'tt3': tt3, 'tt4': tt4, 'user_register_time': user_register_time}
         append_to_json(uid, time_dict1)
         append_to_json(uid, time_dict2)
 

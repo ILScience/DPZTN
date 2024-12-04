@@ -67,22 +67,25 @@ def gateway_main():
 
                 # 如果接收到用户注册请求
                 elif request_type == b"USER REGISTRATION":
-                    user_hash_info, uid, tt8 = user_register(gw_socket, bc_sk)
+                    user_hash_info, uid, tt8 = user_register(gw_socket)
                     register_end_time = get_timestamp()
                     user_register_duration = register_end_time - request_start_time
                     time_dict4 = {'tt8': tt8, 'user_register_duration': user_register_duration}
                     append_to_json(uid, time_dict4)
 
-                elif request_type == b'USER AUTHENTICATION':
-                    user_auth()
+                # elif request_type == b'USER AUTHENTICATION':
+                #     user_auth()
 
-            except Exception as e:
-                pass
-
-            except KeyboardInterrupt:
-                gw_socket.close()
-                server_socket.close()
-                pass
+            except KeyboardInterrupt as k:
+                print('0 KeyboardInterrupt:', k)
+            except ValueError as v:
+                print('0 ValueError:', v)
+            except TypeError as t:
+                print('0 TypeError:', t)
+            except IndexError as i:
+                print('0 IndexError:', i)
+            except AttributeError as a:
+                print('0 AttributeError:', a)
 
 
 if __name__ == '__main__':

@@ -43,8 +43,14 @@ class ECC:
     # 5. 签名消息（使用 Ed25519 签名）
     @staticmethod
     def ecc_sign(signing_key, message):
-        signed_message = signing_key.sign(message)  # 签名并编码
-        return signed_message
+        try:
+            signed_message = signing_key.sign(message)  # 签名并编码
+            print(signed_message)
+            return signed_message
+        except BadSignatureError:
+            print(BadSignatureError)
+        except Exception as e:
+            print(f"Unexpected error in ecc_sign: {e}")
 
     # 6. 验证消息签名（使用 Ed25519 验证）
     @staticmethod

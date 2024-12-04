@@ -21,8 +21,8 @@ def user_main(gid, gateway_socket):
                 continue
 
             # 交换密钥
-            tt1, tt2, exchange_key_duration = pk_exchange(user_socket, gateway_pk, gateway_pk_sig)
-            time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
+            tt_u1, tt_u2, exchange_key_duration = user_pk_exchange(user_socket, gateway_pk, gateway_pk_sig)
+            time_dict1 = {'tt_u1': tt_u1, 'tt_u2': tt_u2, 'exchange_key_duration': exchange_key_duration}
             # 监听用户请求
             while True:
                 try:
@@ -30,19 +30,28 @@ def user_main(gid, gateway_socket):
                     request_type, tt3 = recv_with_header(user_socket)
                     request_start_time = get_timestamp()
                     format_and_print(f'Received message type: {request_type}', '-', 'center')
+
                     if request_type == b"USER REGISTRATION":
-                        uid, tt_u1, tt_b1 = user_register(user_socket, ecc1, gid, gateway_socket)
+                        uid, tt_u3, tt_b1 = user_register(gateway_socket, user_socket, ecc1, gid)
                         register_end_time = get_timestamp()
                         user_register_duration = register_end_time - request_start_time
-                        time_dict2 = {'tt_u1': tt_u1, 'tt_b1': tt_b1, 'user_register_duration': user_register_duration}
+                        time_dict2 = {'tt_u3': tt_u3, 'tt_b1': tt_b1, 'user_register_duration': user_register_duration}
                         append_to_json(uid, time_dict1)
                         append_to_json(uid, time_dict2)
-                    if request_type == b'USER AUTHENTICATION':
+                    elif request_type == b'USER AUTHENTICATION':
                         uid, result = user_auth()
 
-                except Exception as e:
-                    print(e)
-                    pass
+
+                except KeyboardInterrupt as k:
+                    print('KeyboardInterrupt:', k)
+                except ValueError as v:
+                    print('ValueError:', v)
+                except TypeError as t:
+                    print('TypeError:', t)
+                except IndexError as i:
+                    print('IndexError:', i)
+                except AttributeError as a:
+                    print('AttributeError:', a)
 
     except Exception as e:
         print(e)

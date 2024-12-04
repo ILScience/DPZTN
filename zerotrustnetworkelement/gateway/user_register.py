@@ -27,11 +27,14 @@ def receive_user_info(client_socket, ecc, server_private_key, client_public_key)
     format_and_print('2.2 Start receiving user encrypted identities and user signatures', '.', 'left')
     try:
         data, transfer_time = recv_with_header(client_socket)
+        print(data)
         message1 = convert_message(data, 'str')
         client_hash_info, client_sig_str = ecc.ecc_decrypt(server_private_key, client_public_key,
                                                            message1).split("||")  # 消息解密
         client_hash_info = convert_message(client_hash_info, 'bytes')  # 将用户身份加密消息，由str转换成bytes
         client_sig = convert_message(client_sig_str, 'SignedMessage')  # 将用户签名由str转换成SignedMessage
+        print(client_sig)
+        print(client_hash_info)
         format_and_print('2.2 Successful receipt of user information and user signature', '-', 'center')
         return client_hash_info, client_sig, transfer_time
     except Exception as e:
@@ -50,15 +53,25 @@ def verify_user_sign(ecc, client_verify_key, client_sig):
 
 
 # 2.4 将gid和用户加密信息发送给区块链
-def send_gid_and_uinfo(gw_socket, client_socket, client_hash_info, aes_key_to_bc, gid):
+def send_gid_and_uinfo(gateway_socket, client_hash_info, aes_key_to_bc, gid):
     format_and_print(f'Send gid and user identity information to the blockchain', '.', 'left')
     try:
-        send_with_header(gw_socket, b"USER AUTHENTICATION")  # 发送消息类型
+        send_with_header(gateway_socket, b"USER REGISTRATION")  # 发送消息类型
         message2 = aes_encrypt(aes_key_to_bc, convert_message(f'{gid}||{client_hash_info}', 'bytes'))
-        send_with_header(client_socket, message2)
+        print(message2)
+        send_with_header(gateway_socket, message2)
         format_and_print('2.4 Gid and user encrypted message sent.', '-', 'center')
-    except Exception as e:
-        format_and_print(f'2.4 Error calling send_gid_and_uinfo():{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 # 2.5 接收并解析出uid
@@ -66,7 +79,7 @@ def recv_uid_from_bc(server_socket, aes_key_to_bc):
     format_and_print(f'2.5 Send gid and user identity information to the blockchain', '.', 'left')
     try:
         data, transfer_time = recv_with_header(server_socket)
-        user_id = convert_message(aes_decrypt(aes_key_to_bc, data), 'UUID')
+        user_id = convert_message(convert_message(aes_decrypt(aes_key_to_bc, data), 'str'), 'UUID')
         format_and_print('2.5 Receive and parse out the uid.', '-', 'center')
         return user_id, transfer_time
     except Exception as e:
@@ -88,18 +101,28 @@ def generate_gateway_sign(ecc, gateway_sign_key, user_id, gateway_private_key, u
 
 
 # 2 用户注册流程
-def user_register(gw_socket, user_socket, ecc, gid, gateway_socket):
-    format_and_print(f'2 Start the user registration process.', '.', 'left')
+def user_register(gateway_socket, user_socket, ecc, gid):
+    format_and_print(f'2. Start the user registration process.', ':', 'left')
     try:
         aes_key, gateway_pk, gateway_sk, gateway_sig_pk, gateway_sig_sk, user_pk, user_sig_pk = load_register_key()
         client_hash_info, client_sig, tt_u = receive_user_info(user_socket, ecc, gateway_sk, user_pk)
         verify_result = verify_user_sign(ecc, user_sig_pk, client_sig)
         if verify_result:
-            send_gid_and_uinfo(gw_socket, user_socket, client_hash_info, aes_key, gid)
+            send_gid_and_uinfo(gateway_socket, client_hash_info, aes_key, gid)
             user_id, tt_b = recv_uid_from_bc(gateway_socket, aes_key)
             generate_gateway_sign(ecc, gateway_sig_sk, user_id, gateway_sk, user_pk, user_socket)
+            format_and_print('2. Identity Registration Successful', "=", "center")
             return user_id, tt_u, tt_b
         else:
             format_and_print(f'2.3 User Signature Verification Failure!', chr(0x00D7), 'left')
-    except Exception as e:
-        format_and_print(f'2 Error calling user_register():{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)

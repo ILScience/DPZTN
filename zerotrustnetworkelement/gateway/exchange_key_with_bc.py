@@ -24,7 +24,7 @@ def gw_key():
 
 
 # 与区块链建立连接并交换公钥
-def pk_exchange(client_socket, client_public_key, client_verify_key):
+def bc_pk_exchange(client_socket, client_public_key, client_verify_key):
     format_and_print('1.Exchanging Key', '.', 'left')
     try:
         exchange_key_start_time = get_timestamp()

@@ -25,7 +25,7 @@ def gw_user_key():
 
 
 # 公钥交换
-def pk_exchange(client_socket, server_public_key, server_verify_key):
+def user_pk_exchange(client_socket, server_public_key, server_verify_key):
     format_and_print('1.Exchanging Key', ':', 'left')
     try:
         exchange_key_start_time = get_timestamp()

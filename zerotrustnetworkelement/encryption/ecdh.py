@@ -16,7 +16,19 @@ def aes_encrypt(aes_key, plaintext):
 
 
 def aes_decrypt(aes_key, ciphertext):
-    if aes_key is None:
-        raise ValueError("AES 密钥未生成，请调用 generate_aes_key() 方法")
-    plaintext = aes_key.decrypt(ciphertext)
-    return plaintext
+    try:
+        if aes_key is None:
+            raise ValueError("AES 密钥未生成，请调用 generate_aes_key() 方法")
+        plaintext = aes_key.decrypt(ciphertext)
+        return plaintext
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
+

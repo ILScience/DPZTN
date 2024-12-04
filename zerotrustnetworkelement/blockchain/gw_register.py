@@ -14,8 +14,19 @@ def load_register_key():
         format_and_print('2.1 Key loaded successfully', '-', 'center')
         return (server_public_key, server_private_key, server_verify_key,
                 server_sign_key, client_public_key, client_verify_key)
-    except Exception as e:
-        format_and_print(f'2.1 Error calling load_register_key():{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
+    except FileExistsError as f:
+        print('FileExistsError:', f)
 
 
 # 接收网关加密身份信息和网关签名
@@ -32,8 +43,17 @@ def receive_gateway_identity(client_socket, ecc, server_private_key, client_publ
         format_and_print('2.2 Gateway encrypted identity information and gateway signature received successfully', '-',
                          'center')
         return client_hash_info, client_sig, transfer_time
-    except Exception as e:
-        format_and_print(f'2.2 Error calling receive_gateway_identity():{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 # 生成gid，并返回gid注册状态查询结果
@@ -43,8 +63,17 @@ def generate_and_check_gid(client_hash_info):
         gateway_id = generate_gid(convert_message(client_hash_info, 'str'))  # 生成gid
         format_and_print('2.3 Complete gid generation', "-", "center")
         return gateway_id
-    except Exception as e:
-        format_and_print(f'2.3 Error calling generate_and_check_gid():{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 # 给网关返回gid和区块链签名
@@ -57,8 +86,17 @@ def send_gid_and_signature(client_socket, gateway_id, ecc, server_sign_key, serv
                                    f"{gateway_id}||{server_signature}")
         send_with_header(client_socket, convert_message(message2, 'bytes'))
         format_and_print('2.5 Complete gid and blockchain send', "-", "center")
-    except Exception as e:
-        format_and_print(f'2.5 Error calling send_gid_and_signature():{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 # 网关身份注册
@@ -84,5 +122,14 @@ def gw_register(client_socket, ecc):
             format_and_print(f'2.4 Gateway signature verification failed', chr(0x00D7), 'left')
         format_and_print('2.Identity Registration Successful', "=", "center")
         return client_hash_info, gateway_id, verify_result, tt1
-    except Exception as e:
-        format_and_print(f'2.Identity registration failure:{e}', chr(0x00D7), 'left')
+
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
