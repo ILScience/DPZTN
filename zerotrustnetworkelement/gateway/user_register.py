@@ -6,15 +6,18 @@ from zerotrustnetworkelement.encryption.ecdh import *
 def load_register_key():
     format_and_print('2.1 Loading the required key for user registration', '.', 'left')
     try:
-        server_public_key = load_key_from_file("pk_gateway")  # 加载网关公钥
-        server_private_key = load_key_from_file("sk_gateway")  # 加载网关私钥
-        server_verify_key = load_key_from_file("pk_sig_gateway")  # 加载网关认证密钥
-        server_sign_key = load_key_from_file('sk_sig_gateway')  # 加载网关签名密钥
-        client_public_key = load_key_from_file('pk_user')  # 加载用户公钥
-        client_verify_key = load_key_from_file('pk_sig_user')  # 加载用户认证密钥
+        blockchain_public_key = load_key_from_file('pk_bc')
+        gw_private_key = load_key_from_file('sk_gw')
+        aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
+        gateway_public_key = load_key_from_file("pk_gateway")  # 加载网关公钥
+        gateway_private_key = load_key_from_file("sk_gateway")  # 加载网关私钥
+        gateway_verify_key = load_key_from_file("pk_sig_gateway")  # 加载网关认证密钥
+        gateway_sign_key = load_key_from_file('sk_sig_gateway')  # 加载网关签名密钥
+        user_public_key = load_key_from_file('pk_user')  # 加载用户公钥
+        user_verify_key = load_key_from_file('pk_sig_user')  # 加载用户认证密钥
         format_and_print('2.1 Key loaded successfully', '-', 'center')
-        return (server_public_key, server_private_key, server_verify_key,
-                server_sign_key, client_public_key, client_verify_key)
+        return (aes_key_to_bc, gateway_public_key, gateway_private_key, gateway_verify_key,
+                gateway_sign_key, user_public_key, user_verify_key)
     except Exception as e:
         format_and_print(f'2.1 Error calling load_register_key():{e}', chr(0x00D7), 'left')
 
@@ -47,9 +50,10 @@ def verify_user_sign(ecc, client_verify_key, client_sig):
 
 
 # 2.4 将gid和用户加密信息发送给区块链
-def send_gid_and_uinfo(client_socket, client_hash_info, aes_key_to_bc, gid):
+def send_gid_and_uinfo(gw_socket, client_socket, client_hash_info, aes_key_to_bc, gid):
     format_and_print(f'Send gid and user identity information to the blockchain', '.', 'left')
     try:
+        send_with_header(gw_socket, b"USER AUTHENTICATION")  # 发送消息类型
         message2 = aes_encrypt(aes_key_to_bc, convert_message(f'{gid}||{client_hash_info}', 'bytes'))
         send_with_header(client_socket, message2)
         format_and_print('2.4 Gid and user encrypted message sent.', '-', 'center')
@@ -84,17 +88,17 @@ def generate_gateway_sign(ecc, gateway_sign_key, user_id, gateway_private_key, u
 
 
 # 2 用户注册流程
-def user_register(user_socket, ecc, aes_key, gid, gateway_socket):
+def user_register(gw_socket, user_socket, ecc, gid, gateway_socket):
     format_and_print(f'2 Start the user registration process.', '.', 'left')
     try:
-        gateway_pk, gateway_sk, gateway_sig_pk, gateway_sig_sk, user_pk, user_sig_pk = load_register_key()
+        aes_key, gateway_pk, gateway_sk, gateway_sig_pk, gateway_sig_sk, user_pk, user_sig_pk = load_register_key()
         client_hash_info, client_sig, tt_u = receive_user_info(user_socket, ecc, gateway_sk, user_pk)
         verify_result = verify_user_sign(ecc, user_sig_pk, client_sig)
         if verify_result:
-            send_gid_and_uinfo(user_socket, client_hash_info, aes_key, gid)
+            send_gid_and_uinfo(gw_socket, user_socket, client_hash_info, aes_key, gid)
             user_id, tt_b = recv_uid_from_bc(gateway_socket, aes_key)
             generate_gateway_sign(ecc, gateway_sig_sk, user_id, gateway_sk, user_pk, user_socket)
-            return tt_u, tt_b
+            return user_id, tt_u, tt_b
         else:
             format_and_print(f'2.3 User Signature Verification Failure!', chr(0x00D7), 'left')
     except Exception as e:

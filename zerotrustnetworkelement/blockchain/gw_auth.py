@@ -130,6 +130,6 @@ def gw_auth(client_socket, client_hash_info):
         result = verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof,
                                  client_sig)
         format_and_print('3.Successful authentication', '=', 'center')
-        return client_id, aes_key, result, tt1, tt2, tt3
+        return client_id, result, tt1, tt2, tt3
     except Exception as e:
         format_and_print(f'3.Authentication failure:{e}', chr(0x00D7), 'left')

@@ -64,7 +64,7 @@ def gw_register(client_socket, ecc, client_hash_info, server_pk_sig):
          server_public_key, server_verify_key) = load_register_key()
 
         # 发送消息类型
-        send_with_header(client_socket, b"REGISTRATION")
+        send_with_header(client_socket, b"GATEWAY REGISTRATION")
         # 发送网关签名和注册信息
         sign_encrypt_and_send(ecc, client_sign_key, client_hash_info, client_private_key, server_public_key,
                               client_socket)

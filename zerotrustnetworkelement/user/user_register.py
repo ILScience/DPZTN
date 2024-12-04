@@ -1,6 +1,7 @@
 from zerotrustnetworkelement.function import *
 
 
+# 2.1 加载注册密钥
 def load_register_key():
     format_and_print('2.1 Loading the required key for registration', '.', 'left')
     try:
@@ -17,6 +18,7 @@ def load_register_key():
         format_and_print(f'2.1 Error calling load_register_key():{e}', chr(0x00D7), 'left')
 
 
+# 2.2 发送用户签名和用户加密消息
 def sign_encrypt_and_send(ecc, client_sign_key, client_hash_info, client_private_key, server_public_key, client_socket):
     format_and_print('2.2 Start generating gateway signatures and send them to the blockchain', '.', 'left')
     try:
@@ -35,7 +37,7 @@ def sign_encrypt_and_send(ecc, client_sign_key, client_hash_info, client_private
         format_and_print(f'2.2 Error calling sign_encrypt_and_send():{e}', chr(0x00D7), 'left')
 
 
-# 解密数据并验证签名
+# 2.3 解密数据并验证网关签名
 def decrypt_and_verify_data(client_socket, ecc, client_private_key, server_public_key):
     format_and_print('2.3 Start receiving blockchain signatures and verify', '.', 'left')
     try:
@@ -56,7 +58,7 @@ def decrypt_and_verify_data(client_socket, ecc, client_private_key, server_publi
 
 
 # 网关身份注册流程
-def gw_register(client_socket, ecc, client_hash_info, server_pk_sig):
+def user_register(client_socket, ecc, client_hash_info, server_pk_sig):
     format_and_print('2.Starting the Identity Enrollment Process', ':', 'left')
     try:
         # 获取注册过程中使用的公钥

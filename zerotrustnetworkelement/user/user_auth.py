@@ -1,38 +1,39 @@
-from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from noknow.core import ZK
-from zerotrustnetworkelement.gateway.gw_function import *
+from zerotrustnetworkelement.user.user_info import *
 from zerotrustnetworkelement.encryption.myhash import *
+from zerotrustnetworkelement.function import *
 
 
 def load_auth_key():
     format_and_print('3.1 Loading the required key for auth', '.', 'left')
     try:
-        client_private_key = load_key_from_file("sk_gw")  # 加载区块链私钥
-        server_public_key = load_key_from_file("pk_bc")  # 加载区块链公钥
+        user_private_key = load_key_from_file("sk_user")  # 加载用户私钥
+        gateway_public_key = load_key_from_file("pk_gateway")  # 加载网关公钥
         format_and_print('3.1 Key loaded successfully', '-', 'center')
-        return client_private_key, server_public_key
+        return user_private_key, gateway_public_key
     except Exception as e:
         format_and_print(f'3.1 Error calling load_auth_key():{e}', chr(0x00D7), 'left')
 
 
 # 3.2发送网关签名
-def send_gw_sign(client_hash_info1, aes_key, client_socket):
+def send_user_sign(client_hash_info1, aes_key, client_socket):
     format_and_print('3.2 Start sending gateway signatures', '.', 'left')
     try:
         # 确定零知识认证曲线
         client_zk = ZK.new(curve_name="secp256k1", hash_alg="sha3_256")
-        # 构建网关签名并发送给区块链
+        # 构建用户签名并发送给网关
         client_sig = client_zk.create_signature(client_hash_info1)
         message1 = aes_encrypt(aes_key, convert_message(client_sig, 'bytes'))
         send_with_header(client_socket, message1)
         format_and_print('3.2 Gateway signature sent successfully', "_", "center")
         return client_zk
     except Exception as e:
-        format_and_print(f'3.2 Error calling send_gw_sign():{e}', chr(0x00D7), 'left')
+        format_and_print(f'3.2 Error calling send_user_sign():{e}', chr(0x00D7), 'left')
 
 
-# 3.3 接收服务器发送的 token
+# 在网关执行
+# 3.3 接收网关发送的 token
 def recv_bc_token(client_socket, aes_key):
     format_and_print('3.3 Start receiving tokens from the blockchain', '.', 'left')
     try:
@@ -45,7 +46,7 @@ def recv_bc_token(client_socket, aes_key):
         format_and_print(f'3.3 Error calling recv_bc_token():{e}', chr(0x00D7), 'left')
 
 
-# 3.4 生成proof并发送给区块链
+# 3.4 生成proof并发送给网关
 def generate_proof_send(client_zk, client_hash_info1, token, aes_key, client_socket):
     format_and_print('3.4 Start Proof Generation', '.', 'left')
     try:
@@ -57,7 +58,7 @@ def generate_proof_send(client_zk, client_hash_info1, token, aes_key, client_soc
         format_and_print(f'3.4 Error calling generate_proof_send():{e}', chr(0x00D7), 'left')
 
 
-# 接收服务器的验证结果
+# 接收网关的验证结果
 def recv_auth_result(aes_key, client_socket):
     format_and_print('3.5 Start receiving authentication results', '.', 'left')
     try:
@@ -73,7 +74,7 @@ def recv_auth_result(aes_key, client_socket):
         format_and_print(f'3.5 Error calling recv_auth_result():{e}', chr(0x00D7), 'left')
 
 
-def gw_auth(client_socket, client_id):
+def user_auth(client_socket, client_id):
     format_and_print('3.Starting the authentication process', ':', 'left')
     try:
         # 获取认证过程中使用的公钥
@@ -81,12 +82,12 @@ def gw_auth(client_socket, client_id):
         send_with_header(client_socket, b"GATEWAY AUTHENTICATION")  # 发送消息类型
         send_with_header(client_socket, convert_message(f"{client_id}", 'bytes'))  # 发送gid
         aes_key = generate_aes_key(client_private_key, server_public_key)  # 生成会话密钥
-        ip1, client_info1 = get_network_info()  # 获取网关身份信息
+        client_info1 = user_info_generate()  # 获取网关身份信息
         client_hash_info1 = hash_encrypt(convert_message(client_info1, 'str'))  # 对网关身份信息进行加密
 
         # 零知识认证
         # 3.2 发送网关签名
-        client_zk = send_gw_sign(client_hash_info1, aes_key, client_socket)
+        client_zk = send_user_sign(client_hash_info1, aes_key, client_socket)
         # 3.3 接收服务器发送的 token
         token, tt1 = recv_bc_token(client_socket, aes_key)
 

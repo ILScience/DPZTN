@@ -5,7 +5,7 @@ from zerotrustnetworkelement.gateway.user_register import *
 from zerotrustnetworkelement.gateway.user_auth import *
 
 
-def user_main():
+def user_main(gid, gateway_socket):
     try:
         gateway_sk, gateway_pk, gateway_sk_sig, gateway_pk_sig, ecc1 = gw_user_key()
         # 与用户建立连接
@@ -23,7 +23,6 @@ def user_main():
             # 交换密钥
             tt1, tt2, exchange_key_duration = pk_exchange(user_socket, gateway_pk, gateway_pk_sig)
             time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
-            user_hash_info = ''
             # 监听用户请求
             while True:
                 try:
@@ -32,9 +31,14 @@ def user_main():
                     request_start_time = get_timestamp()
                     format_and_print(f'Received message type: {request_type}', '-', 'center')
                     if request_type == b"USER REGISTRATION":
-                        user_register(user_socket, ecc1, aes_key, gid, gateway_socket)
+                        uid, tt_u1, tt_b1 = user_register(user_socket, ecc1, gid, gateway_socket)
                         register_end_time = get_timestamp()
-                        user_register_time = register_end_time - request_start_time
+                        user_register_duration = register_end_time - request_start_time
+                        time_dict2 = {'tt_u1': tt_u1, 'tt_b1': tt_b1, 'user_register_duration': user_register_duration}
+                        append_to_json(uid, time_dict1)
+                        append_to_json(uid, time_dict2)
+                    if request_type == b'USER AUTHENTICATION':
+                        uid, result = user_auth()
 
                 except Exception as e:
                     print(e)
@@ -42,7 +46,3 @@ def user_main():
 
     except Exception as e:
         print(e)
-
-
-if __name__ == '__main__':
-    user_main()

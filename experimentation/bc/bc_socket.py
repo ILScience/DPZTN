@@ -2,10 +2,11 @@ from zerotrustnetworkelement.blockchain.exchange_key import *
 from zerotrustnetworkelement.blockchain.gw_register import *
 from zerotrustnetworkelement.blockchain.gw_auth import *
 from zerotrustnetworkelement.blockchain.connection import *
-from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.blockchain.bc_configure import *
-from zerotrustnetworkelement.blockchain.bc_function import *
 from zerotrustnetworkelement.blockchain.user_register import *
+from zerotrustnetworkelement.blockchain.bc_function import *
+from zerotrustnetworkelement.blockchain.user_auth import *
+from zerotrustnetworkelement.function import *
 
 '''
 时间复杂度：
@@ -56,7 +57,7 @@ def gateway_main():
 
                 # 如果接收到网关身份认证请求
                 elif request_type == b"GATEWAY AUTHENTICATION":
-                    gid, aes_key, result, tt5, tt6, tt7 = gw_auth(gw_socket, gw_hash_info)
+                    gid, result, tt5, tt6, tt7 = gw_auth(gw_socket, gw_hash_info)
                     auth_end_time = get_timestamp()
                     auth_duration = auth_end_time - request_start_time
                     time_dict3 = {'tt3': tt3, 'tt5': tt5, 'tt6': tt6, 'tt7': tt7, 'auth_duration': auth_duration}
@@ -66,10 +67,14 @@ def gateway_main():
 
                 # 如果接收到用户注册请求
                 elif request_type == b"USER REGISTRATION":
-                    user_register()
+                    user_hash_info, uid, tt8 = user_register(gw_socket, bc_sk)
+                    register_end_time = get_timestamp()
+                    user_register_duration = register_end_time - request_start_time
+                    time_dict4 = {'tt8': tt8, 'user_register_duration': user_register_duration}
+                    append_to_json(uid, time_dict4)
 
-
-
+                elif request_type == b'USER AUTHENTICATION':
+                    user_auth()
 
             except Exception as e:
                 pass

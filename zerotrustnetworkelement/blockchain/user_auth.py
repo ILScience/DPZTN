@@ -3,7 +3,7 @@ from zerotrustnetworkelement.encryption.ecdh import *
 from noknow.core import ZK, ZKSignature, ZKData
 
 
-# 3.1 接收用户uid
+# 3.1 接收网关gid和用户uid
 def recv_gw_gid(client_socket):
     format_and_print('3.1 Start receiving gateway gid', '.', 'left')
     try:
