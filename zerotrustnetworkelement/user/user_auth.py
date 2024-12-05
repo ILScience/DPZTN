@@ -16,7 +16,7 @@ def load_auth_key():
         format_and_print(f'3.1 Error calling load_auth_key():{e}', chr(0x00D7), 'left')
 
 
-# 3.2发送网关签名
+# 3.2 发送用户签名
 def send_user_sign(client_hash_info1, aes_key, client_socket):
     format_and_print('3.2 Start sending gateway signatures', '.', 'left')
     try:
@@ -33,7 +33,7 @@ def send_user_sign(client_hash_info1, aes_key, client_socket):
 
 
 # 在网关执行
-# 3.3 接收网关发送的 token
+# 3.3 接收区块链发送的 token
 def recv_bc_token(client_socket, aes_key):
     format_and_print('3.3 Start receiving tokens from the blockchain', '.', 'left')
     try:
@@ -79,8 +79,8 @@ def user_auth(client_socket, client_id):
     try:
         # 获取认证过程中使用的公钥
         client_private_key, server_public_key = load_auth_key()
-        send_with_header(client_socket, b"GATEWAY AUTHENTICATION")  # 发送消息类型
-        send_with_header(client_socket, convert_message(f"{client_id}", 'bytes'))  # 发送gid
+        send_with_header(client_socket, b"USER AUTHENTICATION")  # 发送消息类型
+        send_with_header(client_socket, convert_message(f"{client_id}", 'bytes'))  # 发送uid
         aes_key = generate_aes_key(client_private_key, server_public_key)  # 生成会话密钥
         client_info1 = user_info_generate()  # 获取网关身份信息
         client_hash_info1 = hash_encrypt(convert_message(client_info1, 'str'))  # 对网关身份信息进行加密

@@ -73,8 +73,8 @@ def gateway_main():
                     time_dict4 = {'tt8': tt8, 'user_register_duration': user_register_duration}
                     append_to_json(uid, time_dict4)
 
-                # elif request_type == b'USER AUTHENTICATION':
-                #     user_auth()
+                elif request_type == b'USER AUTHENTICATION':
+                    user_auth()
 
             except KeyboardInterrupt as k:
                 print('0 KeyboardInterrupt:', k)
