@@ -5,13 +5,13 @@ from noknow.core import ZK, ZKSignature, ZKData
 
 # 3.1 接收用户uid
 def recv_uid(client_socket):
-    format_and_print('3.2 Start receiving uid', '.', 'left')
+    format_and_print('3.1 Start receiving uid', '.', 'left')
     try:
         data, transfer_time = recv_with_header(client_socket)
         message = convert_message(data, 'str')
-        client_id = convert_message(message, 'UUID')
-        format_and_print('3.2 Received uid successfully', "_", "center")
-        return client_id, transfer_time
+        user_id = convert_message(message, 'UUID')
+        format_and_print('3.1 Received uid successfully', "_", "center")
+        return user_id, transfer_time
     except KeyboardInterrupt as k:
         print('3.1 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -39,12 +39,16 @@ def load_auth_key():
         gw_sign_key = load_key_from_file('sk_sig_gw')
         aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
 
+        blockchain_public_key = load_key_from_file('pk_bc')
+        gw_private_key = load_key_from_file('sk_gw')
+        aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
+
         gateway_public_key = load_key_from_file('pk_gateway')
         gateway_private_key = load_key_from_file('sk_gateway')
         gateway_verify_key = load_key_from_file('pk_sig_gateway')
         gateway_sign_key = load_key_from_file('sk_sig_gateway')
         user_public_key = load_key_from_file('pk_user')
-        user_verify_key = load_key_from_file('pk_sign_user')
+        user_verify_key = load_key_from_file('pk_sig_user')  # 加载用户认证密钥
         aes_key_to_user = generate_aes_key(gateway_private_key, user_public_key)
 
         format_and_print('3.2 Key required for successful query authentication', "_", "center")
@@ -65,14 +69,14 @@ def load_auth_key():
         print('3.2 FileExistsError:', f)
 
 
-# 3.2 发送请求类型，并将gid和uid发送给区块链
+# 3.3 发送请求类型，并将gid和uid发送给区块链
 def send_gid_uid(aes_key_to_bc, gateway_id, user_id, gateway_socket):
-    format_and_print('3.2 Start sending gid and uid', '.', 'left')
+    format_and_print('3.3 Start sending gid and uid', '.', 'left')
     try:
         send_with_header(gateway_socket, b"USER AUTHENTICATION")  # 发送消息类型
         message = aes_encrypt(aes_key_to_bc, convert_message(f'{gateway_id}||{user_id}', 'bytes'))
         send_with_header(gateway_socket, message)
-        format_and_print('3.2 Send gid and uid over.', "_", "center")
+        format_and_print('3.3 Send gid and uid over.', "_", "center")
     except KeyboardInterrupt as k:
         print('3.3 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -87,14 +91,15 @@ def send_gid_uid(aes_key_to_bc, gateway_id, user_id, gateway_socket):
         print('3.3 FileExistsError:', f)
 
 
-# 3.4 接收用户信息
-def recv_user_info(gateway_socket, aes_key):
+# 3.4 从区块链接收用户信息
+def recv_user_info(gateway_socket, aes_key_to_bc):
     format_and_print('3.4 Start receiving user information', '.', 'left')
     try:
-        message = aes_decrypt(aes_key, recv_with_header(gateway_socket))
+        data, tt_b = recv_with_header(gateway_socket)
+        message = aes_decrypt(aes_key_to_bc, data)
         user_hash_info = convert_message(message, 'str')
         format_and_print('3.4 User information received', "_", "center")
-        return user_hash_info
+        return user_hash_info, tt_b
     except KeyboardInterrupt as k:
         print('3.4 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -110,14 +115,14 @@ def recv_user_info(gateway_socket, aes_key):
 
 
 # 3.5 利用接收到的的网关信息生成网关签名
-def generate_bc_sign(server_private_key, client_public_key, user_hash_info):
+def generate_bc_sign(gateway_private_key, user_public_key, user_hash_info):
     format_and_print('3.5 Signature being generated from gid store information', '.', 'left')
     try:
-        aes_key_to_user = generate_aes_key(server_private_key, client_public_key)
-        server_zk = ZK.new(curve_name="secp384r1", hash_alg="sha3_512")
-        server_signature: ZKSignature = server_zk.create_signature(user_hash_info)
+        aes_key_to_user = generate_aes_key(gateway_private_key, user_public_key)
+        gateway_zk = ZK.new(curve_name="secp384r1", hash_alg="sha3_512")
+        gateway_signature: ZKSignature = gateway_zk.create_signature(user_hash_info)
         format_and_print('3.5 Successfully generated signature based on gid store information', "_", "center")
-        return aes_key_to_user, server_zk, server_signature
+        return aes_key_to_user, gateway_zk, gateway_signature
     except KeyboardInterrupt as k:
         print('3.5 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -132,16 +137,16 @@ def generate_bc_sign(server_private_key, client_public_key, user_hash_info):
         print('3.5 FileExistsError:', f)
 
 
-# 3.6 接收网关签名信息
-def recv_gw_sign(client_socket, aes_key):
+# 3.6 接收用户签名信息
+def recv_gw_sign(user_socket, aes_key_to_user):
     format_and_print('3.6 Receiving gateway signature message', '.', 'left')
     try:
-        data, transfer_time = recv_with_header(client_socket)
-        message1 = aes_decrypt(aes_key, data)
-        client_sig = convert_message(message1, 'ZKSignature')
-        client_zk = ZK(client_sig.params)
+        data, transfer_time = recv_with_header(user_socket)
+        message1 = aes_decrypt(aes_key_to_user, data)
+        user_sig = convert_message(message1, 'ZKSignature')
+        user_zk = ZK(user_sig.params)
         format_and_print('3.6 Successfully received gateway signature message', "_", "center")
-        return client_sig, client_zk, transfer_time
+        return user_sig, user_zk, transfer_time
 
     except KeyboardInterrupt as k:
         print('3.6 KeyboardInterrupt:', k)
@@ -158,14 +163,13 @@ def recv_gw_sign(client_socket, aes_key):
 
 
 # 3.7 生成签名令牌并发送给网关
-def generate_token_and_send(server_zk, client_hash_info, client_zk, aes_key, client_socket):
+def generate_token_and_send(gateway_zk, user_hash_info, user_zk, aes_key_to_user, user_socket):
     format_and_print('3.7 Signature token being generated', '.', 'left')
     try:
-        token = server_zk.sign(client_hash_info, client_zk.token())
-        token_encrypt = aes_encrypt(aes_key, convert_message(token.dump(separator=":"), 'bytes'))
-        send_with_header(client_socket, convert_message(token_encrypt, 'bytes'))
+        token = gateway_zk.sign(user_hash_info, user_zk.token())
+        token_encrypt = aes_encrypt(aes_key_to_user, convert_message(token.dump(separator=":"), 'bytes'))
+        send_with_header(user_socket, convert_message(token_encrypt, 'bytes'))
         format_and_print('3.7 Successfully generated signature token', "_", "center")
-        return token
     except KeyboardInterrupt as k:
         print('3.7 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -181,12 +185,12 @@ def generate_token_and_send(server_zk, client_hash_info, client_zk, aes_key, cli
 
 
 # 3.8 接收网关发送的proof
-def recv_gw_proof(client_socket, aes_key):
+def recv_gw_proof(user_socket, aes_key_to_user):
     format_and_print('3.8 Receiving gateway proof', '.', 'left')
     try:
 
-        data, transfer_time = recv_with_header(client_socket)
-        a = convert_message(aes_decrypt(aes_key, data), 'str')
+        data, transfer_time = recv_with_header(user_socket)
+        a = convert_message(aes_decrypt(aes_key_to_user, data), 'str')
         proof = ZKData.load(a)
         token = ZKData.load(proof.data, ":")
         format_and_print('3.8 Successfully received gateway proof', "_", "center")
@@ -206,21 +210,24 @@ def recv_gw_proof(client_socket, aes_key):
 
 
 # 3.7 验证网关发送的令牌
-def verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof, client_sig):
+def verify_gw_token(gateway_zk, token, gateway_signature, user_socket, gateway_socket, aes_key_to_user, aes_key_to_bc,
+                    user_zk, proof, user_sig):
     format_and_print('3.9 Verifying gateway token', '.', 'left')
     try:
-        if not server_zk.verify(token, server_signature):
+        if not gateway_zk.verify(token, gateway_signature):
             result = b"VERIFY_FAILED"
-            send_with_header(client_socket, aes_encrypt(aes_key, result))
+            send_with_header(user_socket, aes_encrypt(aes_key_to_user, result))
             format_and_print('3.9 Gateway Token Authentication Failed', chr(0x00D7), "left")
         else:
-            if client_zk.verify(proof, client_sig, data=token):
+            if user_zk.verify(proof, user_sig, data=token):
                 result = b"AUTH_SUCCESS"
-                send_with_header(client_socket, aes_encrypt(aes_key, result))
+                send_with_header(user_socket, aes_encrypt(aes_key_to_user, result))
+                send_with_header(gateway_socket, aes_encrypt(aes_key_to_bc, result))
                 format_and_print('3.9 Gateway Token Authentication Successful', "_", "center")
             else:
                 result = b"AUTH_FAILED"
-                send_with_header(client_socket, aes_encrypt(aes_key, result))
+                send_with_header(user_socket, aes_encrypt(aes_key_to_user, result))
+                send_with_header(gateway_socket, aes_encrypt(aes_key_to_bc, result))
                 format_and_print('3.9 Gateway Token Authentication Failed', chr(0x00D7), "left")
         return result
     except KeyboardInterrupt as k:
@@ -242,22 +249,22 @@ def user_auth(user_socket, gateway_socket, gid):
     format_and_print('3.Starting the user authentication process', ':', 'left')
     try:
         # 接收用户uid
-        user_id, tt1 = recv_uid(user_socket)
+        user_id, tt_u1 = recv_uid(user_socket)
         (blockchain_public_key, blockchain_verify_key, gw_public_key, gw_private_key,
          gw_verify_key, gw_sign_key, aes_key_to_bc, gateway_public_key, gateway_private_key,
          gateway_verify_key, gateway_sign_key, user_public_key, user_verify_key, aes_key_to_user) = load_auth_key()
         send_gid_uid(aes_key_to_bc, gid, user_id, gateway_socket)
-        user_hash_info = recv_user_info(gateway_socket, aes_key_to_user)
+        user_hash_info, tt_b1 = recv_user_info(gateway_socket, aes_key_to_bc)
 
-        aes_key, server_zk, server_signature = generate_bc_sign(gateway_private_key, user_public_key,
-                                                                user_hash_info)  # 利用存储在区块链的网关信息生成签名
-        client_sig, client_zk, tt2 = recv_gw_sign(user_socket, aes_key)  # 接收网关签名信息
-        generate_token_and_send(server_zk, user_hash_info, client_zk, aes_key, user_socket)  # 生成签名令牌并发送给网关
-        proof, token, tt3 = recv_gw_proof(user_socket, aes_key)  # 接收网关发送的proof
-        result = verify_gw_token(server_zk, token, server_signature, user_socket, aes_key, client_zk, proof,
-                                 client_sig)
+        aes_key_to_user, server_zk, server_signature = generate_bc_sign(gateway_private_key, user_public_key,
+                                                                        user_hash_info)  # 利用存储在区块链的网关信息生成签名
+        client_sig, client_zk, tt_u2 = recv_gw_sign(user_socket, aes_key_to_user)  # 接收网关签名信息
+        generate_token_and_send(server_zk, user_hash_info, client_zk, aes_key_to_user, user_socket)  # 生成签名令牌并发送给网关
+        proof, token, tt_u3 = recv_gw_proof(user_socket, aes_key_to_user)  # 接收网关发送的proof
+        result = verify_gw_token(server_zk, token, server_signature, user_socket, gateway_socket, aes_key_to_user,
+                                 aes_key_to_bc, client_zk, proof, client_sig)
         format_and_print('3.Successful authentication', '=', 'center')
-        return user_id, aes_key, result, tt1, tt2, tt3
+        return user_id, aes_key_to_user, result, tt_u1, tt_b1, tt_u2, tt_u3
 
     except KeyboardInterrupt as k:
         print('3 KeyboardInterrupt:', k)

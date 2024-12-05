@@ -1,8 +1,9 @@
-from zerotrustnetworkelement.user.user_info import *
 from zerotrustnetworkelement.user.exchange_key_with_gw import *
 import socket
 from zerotrustnetworkelement.user.user_configure import *
 from zerotrustnetworkelement.user.user_register import *
+from zerotrustnetworkelement.user.user_auth import *
+from zerotrustnetworkelement.user.user_info import *
 from zerotrustnetworkelement.function import *
 
 
@@ -30,11 +31,23 @@ def user_main():
         append_to_json(uid, time_dict2)
 
         # 用户身份认证
+        auth_start_time = get_timestamp()
+        auth_result, tt5, tt6 = user_auth(user_socket, uid)
+        auth_end_time = get_timestamp()
+        user_auth_duration = auth_end_time - auth_start_time
+        time_dict3 = {'tt5': tt5, 'tt6': tt6, 'user_auth_duration': user_auth_duration}
+        append_to_json(uid, time_dict3)
 
-
-
-    except Exception as e:
-        print(e)
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 if __name__ == '__main__':

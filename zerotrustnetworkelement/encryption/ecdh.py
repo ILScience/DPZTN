@@ -16,6 +16,14 @@ def aes_encrypt(aes_key, plaintext):
 
 
 def aes_decrypt(aes_key, ciphertext):
+    """
+    使用 AES 密钥解密密文
+
+    :param aes_key: AES 密钥对象 (例如，`cryptography.hazmat.primitives.ciphers.AES`)
+    :param ciphertext: 密文，字节串类型 (bytes)
+
+    :return: 解密后的明文，字节串类型 (bytes)
+    """
     try:
         if aes_key is None:
             raise ValueError("AES 密钥未生成，请调用 generate_aes_key() 方法")
@@ -31,4 +39,3 @@ def aes_decrypt(aes_key, ciphertext):
         print('IndexError:', i)
     except AttributeError as a:
         print('AttributeError:', a)
-

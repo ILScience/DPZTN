@@ -9,11 +9,19 @@ def load_auth_key():
     format_and_print('3.1 Loading the required key for auth', '.', 'left')
     try:
         user_private_key = load_key_from_file("sk_user")  # 加载用户私钥
-        gateway_public_key = load_key_from_file("pk_gateway")  # 加载网关公钥
+        gateway_public_key = load_key_from_file("pk_gw")  # 加载网关公钥
         format_and_print('3.1 Key loaded successfully', '-', 'center')
         return user_private_key, gateway_public_key
-    except Exception as e:
-        format_and_print(f'3.1 Error calling load_auth_key():{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 # 3.2 发送用户签名
@@ -28,11 +36,19 @@ def send_user_sign(client_hash_info1, aes_key, client_socket):
         send_with_header(client_socket, message1)
         format_and_print('3.2 Gateway signature sent successfully', "_", "center")
         return client_zk
-    except Exception as e:
-        format_and_print(f'3.2 Error calling send_user_sign():{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
-# 在网关执行
+
 # 3.3 接收区块链发送的 token
 def recv_bc_token(client_socket, aes_key):
     format_and_print('3.3 Start receiving tokens from the blockchain', '.', 'left')
@@ -42,8 +58,16 @@ def recv_bc_token(client_socket, aes_key):
         token = convert_message(token_decrypt, 'str')
         format_and_print('3.3 Successfully receive the token sent by the blockchain', "_", "center")
         return token, transfer_time
-    except Exception as e:
-        format_and_print(f'3.3 Error calling recv_bc_token():{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 # 3.4 生成proof并发送给网关
@@ -54,11 +78,19 @@ def generate_proof_send(client_zk, client_hash_info1, token, aes_key, client_soc
         proof_encrypt = aes_encrypt(aes_key, convert_message(proof, 'bytes'))
         send_with_header(client_socket, proof_encrypt)
         format_and_print('3.4 Successfully generated proof', "_", "center")
-    except Exception as e:
-        format_and_print(f'3.4 Error calling generate_proof_send():{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
-# 接收网关的验证结果
+# 3.5 接收网关的验证结果
 def recv_auth_result(aes_key, client_socket):
     format_and_print('3.5 Start receiving authentication results', '.', 'left')
     try:
@@ -70,8 +102,16 @@ def recv_auth_result(aes_key, client_socket):
             auth_result = False
         format_and_print('3.5 Authentication result received successfully', "_", "center")
         return auth_result, transfer_time
-    except Exception as e:
-        format_and_print(f'3.5 Error calling recv_auth_result():{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 
 def user_auth(client_socket, client_id):
@@ -96,6 +136,13 @@ def user_auth(client_socket, client_id):
         # 3.5 接收服务器的验证结果
         auth_result, tt2 = recv_auth_result(aes_key, client_socket)
         return auth_result, tt1, tt2
-
-    except Exception as e:
-        format_and_print(f'3.Authentication failure:{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)

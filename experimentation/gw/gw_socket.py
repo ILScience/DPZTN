@@ -54,11 +54,8 @@ def gateway_main():
             if auth_result:
                 format_and_print('3.Successful authentication', "=", "center")
                 return auth_result, gid, gw_socket
-
-
             else:
                 format_and_print('3.Authentication failure', chr(0x00D7), "center")
-
         else:
             format_and_print('2.Identity registration failure', chr(0x00D7), "center")
 

@@ -39,8 +39,13 @@ def user_main(gid, gateway_socket):
                         append_to_json(uid, time_dict1)
                         append_to_json(uid, time_dict2)
                     elif request_type == b'USER AUTHENTICATION':
-                        uid, result = user_auth()
-
+                        uid, aes_key_to_user, result, tt_u4, tt_b2, tt_u5, tt_u6 = user_auth(user_socket,
+                                                                                             gateway_socket, gid)
+                        auth_end_time = get_timestamp()
+                        user_auth_duration = auth_end_time - request_start_time
+                        time_dict3 = {'tt_u4': tt_u4, 'tt_b2': tt_b2, 'tt_u5': tt_u5, 'tt_u6': tt_u6,
+                                      'user_auth_duration': user_auth_duration}
+                        append_to_json(uid, time_dict3)
 
                 except KeyboardInterrupt as k:
                     print('KeyboardInterrupt:', k)
@@ -53,5 +58,13 @@ def user_main(gid, gateway_socket):
                 except AttributeError as a:
                     print('AttributeError:', a)
 
-    except Exception as e:
-        print(e)
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)

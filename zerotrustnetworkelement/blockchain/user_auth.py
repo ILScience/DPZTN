@@ -1,6 +1,5 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
-from noknow.core import ZK, ZKSignature, ZKData
 
 
 # 3.1 接收网关gid和用户uid
@@ -13,6 +12,7 @@ def recv_gw_gid(client_socket, aes_key):
         user_id = convert_message(user_id, 'UUID')
         format_and_print('3.1.Received gateway gid successfully', "_", "center")
         return gateway_id, user_id, transfer_time
+
     except KeyboardInterrupt as k:
         print('3.3 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -39,7 +39,7 @@ def load_auth_key(user_hash_info):
         gateway_public_key = load_key_from_file('pk_gw')
         gateway_verify_key = load_key_from_file('pk_sig_gw')
         # 加载用户公钥反馈给网关
-        user_hash_info = user_hash_info
+        user_hash_info = convert_message(user_hash_info, 'bytes')
         aes_key = generate_aes_key(blockchain_private_key, gateway_public_key)
         format_and_print('3.2 Key required for successful query authentication', "_", "center")
         return (blockchain_public_key, blockchain_private_key, blockchain_verify_key, blockchain_sign_key,
@@ -63,9 +63,13 @@ def load_auth_key(user_hash_info):
 def send_user_info(gateway_socket, user_hash_info, aes_key):
     format_and_print('3.3 Start returning user information', '.', 'left')
     try:
-        message = aes_encrypt(aes_key, convert_message(user_hash_info, 'bytes'))
+        print(user_hash_info)
+        print(type(user_hash_info))
+        message = aes_encrypt(aes_key, user_hash_info)
+        print(message)
         send_with_header(gateway_socket, message)
         format_and_print('3.3 User information returned', "_", "center")
+
     except KeyboardInterrupt as k:
         print('3.3 KeyboardInterrupt:', k)
     except ValueError as v:
@@ -80,15 +84,49 @@ def send_user_info(gateway_socket, user_hash_info, aes_key):
         print('3.3 FileExistsError:', f)
 
 
+# 3.4 接收网关传回的注册结果
+def recv_auth_result(gateway_socket):
+    format_and_print('3.4 Start receiving auth result', '.', 'left')
+    try:
+        data, transfer_time = recv_with_header(gateway_socket)
+        auth_result = convert_message(data, 'str')
+        format_and_print('3.4 Received auth result', "_", "center")
+        return auth_result, transfer_time
+
+    except KeyboardInterrupt as k:
+        print('3.4 KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('3.4 ValueError:', v)
+    except TypeError as t:
+        print('3.4 TypeError:', t)
+    except IndexError as i:
+        print('3.4 IndexError:', i)
+    except AttributeError as a:
+        print('3.4 AttributeError:', a)
+    except FileExistsError as f:
+        print('3.4 FileExistsError:', f)
+
+
 # 3 网关认证
 def user_auth(gateway_socket, user_hash_info):
     format_and_print('3.Starting the authentication process', ':', 'left')
     try:
         (blockchain_public_key, blockchain_private_key, blockchain_verify_key, blockchain_sign_key,
          gateway_public_key, gateway_verify_key, user_hash_info, aes_key) = load_auth_key(user_hash_info)
-        gateway_id, user_id, transfer_time = recv_gw_gid(gateway_socket, aes_key)
+        gateway_id, user_id, tt1 = recv_gw_gid(gateway_socket, aes_key)
         send_user_info(gateway_socket, user_hash_info, aes_key)
+        auth_result, tt2 = recv_auth_result(gateway_socket)
+        return user_id, aes_key, tt1, auth_result, tt2
 
-        return user_id, aes_key, transfer_time
-    except Exception as e:
-        format_and_print(f'3.Authentication failure:{e}', chr(0x00D7), 'left')
+    except KeyboardInterrupt as k:
+        print('3 KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('3 ValueError:', v)
+    except TypeError as t:
+        print('3 TypeError:', t)
+    except IndexError as i:
+        print('3 IndexError:', i)
+    except AttributeError as a:
+        print('3 AttributeError:', a)
+    except FileExistsError as f:
+        print('3 FileExistsError:', f)

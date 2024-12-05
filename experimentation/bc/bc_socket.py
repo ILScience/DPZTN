@@ -38,7 +38,7 @@ def gateway_main():
         # 交换密钥
         tt1, tt2, exchange_key_duration = pk_exchange(gw_socket, bc_pk, bc_pk_sig)
         time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
-
+        user_hash_info = ''
         while True:
             try:
                 # 接收请求类型
@@ -74,7 +74,11 @@ def gateway_main():
                     append_to_json(uid, time_dict4)
 
                 elif request_type == b'USER AUTHENTICATION':
-                    user_auth()
+                    uid, aes_key, tt9, auth_result, tt10 = user_auth(gw_socket, user_hash_info)
+                    auth_end_time = get_timestamp()
+                    user_auth_duration = auth_end_time - request_start_time
+                    time_dict5 = {'tt9': tt9, 'tt10': tt10, 'user_auth_duration': user_auth_duration}
+                    append_to_json(uid, time_dict5)
 
             except KeyboardInterrupt as k:
                 print('0 KeyboardInterrupt:', k)
