@@ -10,6 +10,7 @@ from nacl.public import PublicKey
 import uuid
 import noknow
 from noknow.core import ZKSignature, ZKData
+import csv
 
 
 def format_and_print(text, symbol, alignment):
@@ -306,3 +307,38 @@ def append_to_json(filename, time_dict):
 
     except Exception as e:
         print(e)
+
+
+# 监控资源的函数
+def monitor_resources(process, output_file="resource_usage.csv", duration=10):
+    start_time = time.time()
+
+    # 如果文件存在，先删除它，确保覆盖
+    if os.path.exists(output_file):
+        os.remove(output_file)
+        print(f"{output_file} 已存在，已被删除，准备创建新的文件。")
+
+    # 打开CSV文件并准备写入
+    with open(output_file, mode='w', newline='') as csvfile:
+        fieldnames = ['timestamp', 'cpu_usage', 'memory_usage']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        # 写入CSV文件头
+        writer.writeheader()
+
+        # 记录资源占用情况
+        while time.time() - start_time < duration:
+            # 获取CPU占用百分比，等待0.1秒
+            cpu_usage = process.cpu_percent(interval=0.1)
+            # 获取内存使用情况，单位MB
+            memory_usage = process.memory_info().rss / (1024 * 1024)
+
+            # 获取当前时间戳
+            timestamp = time.time() - start_time
+
+            # 写入到CSV文件
+            writer.writerow(
+                {'timestamp': round(timestamp, 2), 'cpu_usage': cpu_usage, 'memory_usage': round(memory_usage, 2)})
+
+            # # 打印到控制台（可选）
+            # print(f"CPU使用率: {cpu_usage}% | 内存使用: {memory_usage:.2f} MB")

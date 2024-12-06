@@ -1,3 +1,5 @@
+import threading
+import psutil
 from zerotrustnetworkelement.blockchain.exchange_key import *
 from zerotrustnetworkelement.blockchain.gw_register import *
 from zerotrustnetworkelement.blockchain.gw_auth import *
@@ -24,7 +26,7 @@ def gateway_main():
     # 与网关建立连接
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bc_ip, bc_port))
-    server_socket.listen(1)
+    server_socket.listen(5)
     format_and_print(f'blockchain server listening on {bc_ip}:{bc_port}', '.', 'left')
     gw_hash_info = ''
     while True:
@@ -90,7 +92,20 @@ def gateway_main():
                 print('0 IndexError:', i)
             except AttributeError as a:
                 print('0 AttributeError:', a)
+            except ConnectionError:
+                continue
 
 
 if __name__ == '__main__':
+    # 获取当前进程
+    process = psutil.Process()
+    # 定义监控的时长（例如10秒）
+    monitoring_duration = 20
+    # 创建并启动监控线程
+    monitor_thread = threading.Thread(target=monitor_resources,
+                                      args=(process, "resource_usage.csv", monitoring_duration))
+    monitor_thread.start()
+    # 调用主任务
     gateway_main()
+    # 等待监控线程完成
+    monitor_thread.join()

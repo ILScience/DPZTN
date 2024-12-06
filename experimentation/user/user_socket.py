@@ -5,6 +5,8 @@ from zerotrustnetworkelement.user.user_register import *
 from zerotrustnetworkelement.user.user_auth import *
 from zerotrustnetworkelement.user.user_info import *
 from zerotrustnetworkelement.function import *
+import threading
+import psutil
 
 
 def user_main():
@@ -23,32 +25,47 @@ def user_main():
 
         # 用户注册
         register_start_time = get_timestamp()
-        uid, tt3, tt4 = user_register(user_socket, ecc1, user_hash_info, gateway_pk_sig)
+        uid, reg_result, tt3 = user_register(user_socket, ecc1, user_hash_info, gateway_pk_sig)
         register_end_time = get_timestamp()
         user_register_time = register_end_time - register_start_time
-        time_dict2 = {'tt3': tt3, 'tt4': tt4, 'user_register_time': user_register_time}
+        time_dict2 = {'tt3': tt3, 'user_register_time': user_register_time}
         append_to_json(uid, time_dict1)
         append_to_json(uid, time_dict2)
-
-        # 用户身份认证
-        auth_start_time = get_timestamp()
-        auth_result, tt5, tt6 = user_auth(user_socket, uid)
-        auth_end_time = get_timestamp()
-        user_auth_duration = auth_end_time - auth_start_time
-        time_dict3 = {'tt5': tt5, 'tt6': tt6, 'user_auth_duration': user_auth_duration}
-        append_to_json(uid, time_dict3)
+        if reg_result:
+            # 用户身份认证
+            auth_start_time = get_timestamp()
+            auth_result, tt5, tt6 = user_auth(user_socket, uid)
+            auth_end_time = get_timestamp()
+            user_auth_duration = auth_end_time - auth_start_time
+            time_dict3 = {'tt5': tt5, 'tt6': tt6, 'user_auth_duration': user_auth_duration}
+            append_to_json(uid, time_dict3)
+        else:
+            print('Failed to register')
 
     except KeyboardInterrupt as k:
-        print('KeyboardInterrupt:', k)
+        print(f'KeyboardInterrupt: {k}')
     except ValueError as v:
-        print('ValueError:', v)
+        print(f'ValueError: {v}')
     except TypeError as t:
-        print('TypeError:', t)
+        print(f'TypeError: {t}')
     except IndexError as i:
-        print('IndexError:', i)
+        print(f'IndexError: {i}')
     except AttributeError as a:
-        print('AttributeError:', a)
+        print(f'AttributeError: {a}')
+    except Exception as e:  # 捕获其他异常
+        print(f'Unexpected error: {e}')
 
 
 if __name__ == '__main__':
+    # 获取当前进程
+    process = psutil.Process()
+    # 定义监控的时长（例如10秒）
+    monitoring_duration = 20
+    # 创建并启动监控线程
+    monitor_thread = threading.Thread(target=monitor_resources,
+                                      args=(process, "resource_usage.csv", monitoring_duration))
+    monitor_thread.start()
+    # 调用主任务
     user_main()
+    # 等待监控线程完成
+    monitor_thread.join()

@@ -5,8 +5,8 @@ from zerotrustnetworkelement.gateway.gw_auth import *
 from gateway_socket_to_user import *
 import socket
 from zerotrustnetworkelement.gateway.gw_configure import *
-
-# from zerotrustnetworkelement.gateway.exchange_key_with_user import *
+import threading
+import psutil
 
 '''
 时间复杂度：
@@ -59,7 +59,6 @@ def gateway_main():
         else:
             format_and_print('2.Identity registration failure', chr(0x00D7), "center")
 
-
     except KeyboardInterrupt as k:
         print('KeyboardInterrupt:', k)
     except ValueError as v:
@@ -76,8 +75,10 @@ def user_main_zl(auth_result, gid, gateway_socket):
     try:
         if auth_result:
             user_main(gid, gateway_socket)
+
         else:
             print('gateway auth failed!')
+
 
     except KeyboardInterrupt as k:
         print('KeyboardInterrupt:', k)
@@ -92,5 +93,16 @@ def user_main_zl(auth_result, gid, gateway_socket):
 
 
 if __name__ == '__main__':
+    # 获取当前进程
+    process = psutil.Process()
+    # 定义监控的时长（例如10秒）
+    monitoring_duration = 20
+    # 创建并启动监控线程
+    monitor_thread = threading.Thread(target=monitor_resources,
+                                      args=(process, "resource_usage.csv", monitoring_duration))
+    monitor_thread.start()
+    # 调用主任务
     auth_result, gid, gw_socket = gateway_main()
     user_main_zl(auth_result, gid, gw_socket)
+    # 等待监控线程完成
+    monitor_thread.join()

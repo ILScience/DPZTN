@@ -3,8 +3,8 @@ import os
 net_profile_name = 'network_ztne.json'
 net_profile_path = os.path.join(os.path.abspath(''), net_profile_name)
 
-# bc_ip = '51.1.1.1'
-bc_ip = '192.168.99.50'
+bc_ip = '51.1.1.1'
+# bc_ip = '192.168.99.50'
 bc_port = 20000
 sc_port = 10000
 

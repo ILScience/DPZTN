@@ -1,422 +1,156 @@
 [
     {
-        "tt1": 47800.0,
-        "tt2": 17000.0,
-        "exchange_key_duration": 185300.0
+        "tt1": 161700.0,
+        "tt2": 134800.0,
+        "exchange_key_duration": 361200.0
     },
     {
-        "tt3": 108200.0,
-        "register_duration": 28399800.0
+        "tt3": 123200.0,
+        "register_duration": 36698100.0
     },
     {
-        "tt4": 75200.0,
-        "tt5": 129000.0,
-        "auth_duration ": 63044500.0
+        "tt4": 176900.0,
+        "tt5": 181300.0,
+        "auth_duration ": 80529400.0
     },
     {
-        "tt1": 48100.0,
-        "tt2": 22400.0,
-        "exchange_key_duration": 175300.0
+        "tt1": 101500.0,
+        "tt2": 67900.0,
+        "exchange_key_duration": 322500.0
     },
     {
-        "tt3": 66800.0,
-        "register_duration": 4232500.0
+        "tt3": 83300.0,
+        "register_duration": 5417100.0
     },
     {
-        "tt4": 64500.0,
-        "tt5": 133700.0,
-        "auth_duration ": 62267100.0
-    },
-    {
-        "tt1": 57400.0,
-        "tt2": 29000.0,
-        "exchange_key_duration": 207700.0
-    },
-    {
-        "tt3": 40400.0,
-        "register_duration": 4508200.0
-    },
-    {
-        "tt4": 70100.0,
-        "tt5": 71200.0,
-        "auth_duration ": 74244100.0
-    },
-    {
-        "tt1": 45400.0,
-        "tt2": 30600.0,
-        "exchange_key_duration": 168400.0
-    },
-    {
-        "tt3": 35600.0,
-        "register_duration": 4837200.0
-    },
-    {
-        "tt4": 45100.0,
-        "tt5": 54300.0,
-        "auth_duration ": 71633600.0
-    },
-    {
-        "tt1": 55500.0,
-        "tt2": 26500.0,
-        "exchange_key_duration": 192100.0
-    },
-    {
-        "tt3": 40600.0,
-        "register_duration": 4812800.0
-    },
-    {
-        "tt4": 50800.0,
-        "tt5": 35700.0,
-        "auth_duration ": 72033300.0
-    },
-    {
-        "tt1": 95500.0,
-        "tt2": 113500.0,
-        "exchange_key_duration": 139900.0
-    },
-    {
-        "tt3": 35600.0,
-        "register_duration": 4947200.0
-    },
-    {
-        "tt4": 59200.0,
-        "tt5": 54800.0,
-        "auth_duration ": 76031600.0
-    },
-    {
-        "tt1": 78500.0,
-        "tt2": 58400.0,
-        "exchange_key_duration": 238000.0
-    },
-    {
-        "tt3": 133700.0,
-        "register_duration": 4289000.0
-    },
-    {
-        "tt4": 126400.0,
-        "tt5": 32800.0,
-        "auth_duration ": 61909800.0
+        "tt4": 98600.0,
+        "tt5": 93000.0,
+        "auth_duration ": 82429500.0
     },
     {
         "tt1": 71100.0,
-        "tt2": 61400.0,
-        "exchange_key_duration": 272300.0
+        "tt2": 34400.0,
+        "exchange_key_duration": 240000.0
     },
     {
-        "tt3": 41500.0,
-        "register_duration": 4674300.0
+        "tt3": 54600.0,
+        "register_duration": 5390100.0
     },
     {
-        "tt4": 66900.0,
-        "tt5": 85400.0,
-        "auth_duration ": 73826100.0
+        "tt4": 86800.0,
+        "tt5": 94200.0,
+        "auth_duration ": 84737700.0
     },
     {
-        "tt1": 48000.0,
-        "tt2": 13400.0,
-        "exchange_key_duration": 162500.0
+        "tt1": 65400.0,
+        "tt2": 36100.0,
+        "exchange_key_duration": 254800.0
     },
     {
-        "tt3": 70800.0,
-        "register_duration": 11049000.0
+        "tt3": 82800.0,
+        "register_duration": 16744600.0
     },
     {
-        "tt4": 73800.0,
-        "tt5": 124800.0,
-        "auth_duration ": 61961400.0
+        "tt4": 72500.0,
+        "tt5": 114600.0,
+        "auth_duration ": 90815200.0
     },
     {
-        "tt1": 45400.0,
-        "tt2": 16900.0,
-        "exchange_key_duration": 197300.0
+        "tt1": 55000.0,
+        "tt2": 25800.0,
+        "exchange_key_duration": 242100.0
     },
     {
-        "tt3": 37600.0,
-        "register_duration": 4104700.0
+        "tt3": 737700.0,
+        "register_duration": 11257900.0
     },
     {
-        "tt4": 135200.0,
-        "tt5": 130400.0,
-        "auth_duration ": 62603300.0
+        "tt4": 72500.0,
+        "tt5": 90900.0,
+        "auth_duration ": 83630300.0
     },
     {
-        "tt1": 45800.0,
-        "tt2": 28900.0,
-        "exchange_key_duration": 186900.0
+        "tt1": 56800.0,
+        "tt2": 15300.0,
+        "exchange_key_duration": 209700.0
     },
     {
-        "tt3": 47500.0,
-        "register_duration": 8901800.0
+        "tt3": 75800.0,
+        "register_duration": 4956100.0
     },
     {
-        "tt4": 44900.0,
-        "tt5": 50900.0,
-        "auth_duration ": 72459700.0
+        "tt4": 94300.0,
+        "tt5": 102400.0,
+        "auth_duration ": 80873400.0
     },
     {
-        "tt1": 50100.0,
-        "tt2": 30500.0,
-        "exchange_key_duration": 92100.0
+        "tt1": 62800.0,
+        "tt2": 34600.0,
+        "exchange_key_duration": 237100.0
     },
     {
-        "tt3": 55900.0,
-        "register_duration": 4728200.0
+        "tt3": 75900.0,
+        "register_duration": 5119800.0
     },
     {
-        "tt4": 76300.0,
-        "tt5": 80600.0,
-        "auth_duration ": 73366700.0
+        "tt4": 86200.0,
+        "tt5": 95900.0,
+        "auth_duration ": 79463100.0
     },
     {
-        "tt1": 52700.0,
-        "tt2": 26300.0,
-        "exchange_key_duration": 200600.0
+        "tt1": 69800.0,
+        "tt2": 27400.0,
+        "exchange_key_duration": 251300.0
     },
     {
-        "tt3": 39400.0,
-        "register_duration": 4684000.0
+        "tt3": 69400.0,
+        "register_duration": 6425300.0
     },
     {
-        "tt4": 50200.0,
-        "tt5": 55800.0,
-        "auth_duration ": 71053300.0
+        "tt4": 110400.0,
+        "tt5": 83100.0,
+        "auth_duration ": 79788200.0
     },
     {
-        "tt1": 105699.96875,
-        "tt2": 40900.03125,
-        "exchange_key_duration": 505300.0
+        "tt1": 61400.0,
+        "tt2": 30800.0,
+        "exchange_key_duration": 250000.0
     },
     {
-        "tt3": 249299.96875,
-        "register_duration": 5565300.0
+        "tt3": 62700.0,
+        "register_duration": 11031900.0
     },
     {
-        "tt4": 87200.0,
-        "tt5": 154300.0,
-        "auth_duration ": 80208099.96875
+        "tt4": 126600.0,
+        "tt5": 76100.0,
+        "auth_duration ": 81655600.0
     },
     {
-        "tt1": 99500.0,
-        "tt2": 70200.03125,
-        "exchange_key_duration": 237400.0
+        "tt1": 50000.0,
+        "tt2": 16200.0,
+        "exchange_key_duration": 263600.0
     },
     {
-        "tt3": 76800.0,
-        "register_duration": 5255300.03125
+        "tt3": 38300.0,
+        "register_duration": 4920100.0
     },
     {
-        "tt4": 92800.0,
-        "tt5": 63599.9375,
-        "auth_duration ": 82536300.0
+        "tt4": 144300.0,
+        "tt5": 100500.0,
+        "auth_duration ": 83708600.0
     },
     {
-        "tt1": 47700.0,
-        "tt2": 20200.03125,
-        "exchange_key_duration": 136300.0625
+        "tt1": 68000.0,
+        "tt2": 34000.0,
+        "exchange_key_duration": 275200.0
     },
     {
-        "tt3": 50000.03125,
-        "register_duration": 5889499.9375
+        "tt3": 43700.0,
+        "register_duration": 5390000.0
     },
     {
-        "tt4": 55000.03125,
-        "tt5": 75600.0,
-        "auth_duration ": 86508700.0625
-    },
-    {
-        "tt1": 55799.96875,
-        "tt2": 18400.03125,
-        "exchange_key_duration": 216599.96875
-    },
-    {
-        "tt3": 56999.96875,
-        "register_duration": 12037799.96875
-    },
-    {
-        "tt4": 60600.0625,
-        "tt5": 51700.0,
-        "auth_duration ": 87204199.96875
-    },
-    {
-        "tt1": 109900.0,
-        "tt2": 79500.03125,
-        "exchange_key_duration": 478299.96875
-    },
-    {
-        "tt3": 83900.0,
-        "register_duration": 6639800.03125
-    },
-    {
-        "tt4": 94999.96875,
-        "tt5": 82300.0,
-        "auth_duration ": 81762699.96875
-    },
-    {
-        "tt1": 50900.03125,
-        "tt2": 23800.03125,
-        "exchange_key_duration": 192700.03125
-    },
-    {
-        "tt3": 58800.0,
-        "register_duration": 5086199.9375
-    },
-    {
-        "tt4": 50699.96875,
-        "tt5": 78399.9375,
-        "auth_duration ": 78583300.0
-    },
-    {
-        "tt1": 46600.0,
-        "tt2": 18900.03125,
-        "exchange_key_duration": 180299.96875
-    },
-    {
-        "tt3": 103500.03125,
-        "register_duration": 5101400.03125
-    },
-    {
-        "tt4": 88199.96875,
-        "tt5": 129600.0,
-        "auth_duration ": 79563300.0
-    },
-    {
-        "tt1": 63800.0,
-        "tt2": 31300.03125,
-        "exchange_key_duration": 230299.9375
-    },
-    {
-        "tt3": 47099.9375,
-        "register_duration": 5294100.03125
-    },
-    {
-        "tt4": 82199.96875,
-        "tt5": 88900.03125,
-        "auth_duration ": 81800100.0625
-    },
-    {
-        "tt1": 92800.0,
-        "tt2": 65300.03125,
-        "exchange_key_duration": 239999.96875
-    },
-    {
-        "tt3": 78900.03125,
-        "register_duration": 6354800.03125
-    },
-    {
-        "tt4": 99500.0,
-        "tt5": 85100.0,
-        "auth_duration ": 79374600.0
-    },
-    {
-        "tt1": 108300.0,
-        "tt2": 82199.96875,
-        "exchange_key_duration": 344600.0
-    },
-    {
-        "tt3": 85000.03125,
-        "register_duration": 5761399.96875
-    },
-    {
-        "tt4": 62900.03125,
-        "tt5": 73599.96875,
-        "auth_duration ": 78274700.03125
-    },
-    {
-        "tt1": 64199.96875,
-        "tt2": 57199.96875,
-        "exchange_key_duration": 311899.96875
-    },
-    {
-        "tt3": 53100.0,
-        "register_duration": 10388800.0
-    },
-    {
-        "tt4": 64200.03125,
-        "tt5": 73099.96875,
-        "auth_duration ": 81603400.0
-    },
-    {
-        "tt1": 54400.0,
-        "tt2": 13900.0,
-        "exchange_key_duration": 242899.96875
-    },
-    {
-        "tt3": 72699.96875,
-        "register_duration": 5161500.0
-    },
-    {
-        "tt4": 74699.96875,
-        "tt5": 175600.0,
-        "auth_duration ": 78970500.03125
-    },
-    {
-        "tt1": 56900.03125,
-        "tt2": 19300.03125,
-        "exchange_key_duration": 224699.96875
-    },
-    {
-        "tt3": 75799.96875,
-        "register_duration": 5029200.0
-    },
-    {
-        "tt4": 141899.96875,
-        "tt5": 133700.03125,
-        "auth_duration ": 79750799.96875
-    },
-    {
-        "tt1": 50599.96875,
-        "tt2": 19099.96875,
-        "exchange_key_duration": 156300.03125
-    },
-    {
-        "tt3": 75100.0625,
-        "register_duration": 5083300.0
-    },
-    {
-        "tt4": 85200.0,
-        "tt5": 38300.0,
-        "auth_duration ": 79563999.96875
-    },
-    {
-        "tt1": 97699.96875,
-        "tt2": 77200.0,
-        "exchange_key_duration": 297400.0
-    },
-    {
-        "tt3": 37500.0625,
-        "register_duration": 6748700.0625
-    },
-    {
-        "tt4": 69400.0,
-        "tt5": 61700.0,
-        "auth_duration ": 88229199.96875
-    },
-    {
-        "tt1": 55600.0,
-        "tt2": 18400.0,
-        "exchange_key_duration": 205000.0
-    },
-    {
-        "tt3": 94000.0,
-        "register_duration": 5190400.0
-    },
-    {
-        "tt4": 69900.0,
-        "tt5": 104100.0,
-        "auth_duration ": 86742100.0
-    },
-    {
-        "tt1": 59500.0,
-        "tt2": 21100.0,
-        "exchange_key_duration": 232200.0
-    },
-    {
-        "tt3": 142100.0,
-        "register_duration": 9676200.0
-    },
-    {
-        "tt4": 145500.0,
-        "tt5": 83500.0,
-        "auth_duration ": 79557900.0
+        "tt4": 96100.0,
+        "tt5": 100600.0,
+        "auth_duration ": 83492000.0
     }
 ]

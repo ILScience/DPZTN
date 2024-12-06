@@ -135,6 +135,7 @@ def user_auth(client_socket, client_id):
         generate_proof_send(client_zk, client_hash_info1, token, aes_key, client_socket)
         # 3.5 接收服务器的验证结果
         auth_result, tt2 = recv_auth_result(aes_key, client_socket)
+        format_and_print('3.Successful authentication', '=', 'center')
         return auth_result, tt1, tt2
     except KeyboardInterrupt as k:
         print('KeyboardInterrupt:', k)

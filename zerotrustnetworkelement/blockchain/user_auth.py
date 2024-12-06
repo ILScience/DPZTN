@@ -109,13 +109,14 @@ def recv_auth_result(gateway_socket):
 
 # 3 网关认证
 def user_auth(gateway_socket, user_hash_info):
-    format_and_print('3.Starting the authentication process', ':', 'left')
+    format_and_print('3. Starting the authentication process', ':', 'left')
     try:
         (blockchain_public_key, blockchain_private_key, blockchain_verify_key, blockchain_sign_key,
          gateway_public_key, gateway_verify_key, user_hash_info, aes_key) = load_auth_key(user_hash_info)
         gateway_id, user_id, tt1 = recv_gw_gid(gateway_socket, aes_key)
         send_user_info(gateway_socket, user_hash_info, aes_key)
         auth_result, tt2 = recv_auth_result(gateway_socket)
+        format_and_print('3. Auth success', "=", "center")
         return user_id, aes_key, tt1, auth_result, tt2
 
     except KeyboardInterrupt as k:

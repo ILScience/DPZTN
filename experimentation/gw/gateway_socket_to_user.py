@@ -11,15 +11,10 @@ def user_main(gid, gateway_socket):
         # 与用户建立连接
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((gateway_ip, gateway_port))
-        server_socket.listen(1)
+        server_socket.listen(5)
         format_and_print(f'blockchain server listening on {gateway_ip}:{gateway_port}', '.', 'left')
         while True:
-            try:
-                user_socket, user_addr = server_socket.accept()
-            except Exception as e:
-                format_and_print(f'Error in Listening User:{e}', chr(0x00D7), 'left')
-                continue
-
+            user_socket, user_addr = server_socket.accept()
             # 交换密钥
             tt_u1, tt_u2, exchange_key_duration = user_pk_exchange(user_socket, gateway_pk, gateway_pk_sig)
             time_dict1 = {'tt_u1': tt_u1, 'tt_u2': tt_u2, 'exchange_key_duration': exchange_key_duration}
@@ -57,6 +52,8 @@ def user_main(gid, gateway_socket):
                     print('IndexError:', i)
                 except AttributeError as a:
                     print('AttributeError:', a)
+                except ConnectionError as a:
+                    continue
 
     except KeyboardInterrupt as k:
         print('KeyboardInterrupt:', k)
@@ -68,3 +65,4 @@ def user_main(gid, gateway_socket):
         print('IndexError:', i)
     except AttributeError as a:
         print('AttributeError:', a)
+
