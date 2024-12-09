@@ -1,32 +1,5 @@
-from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.blockchain.bc_function import *
-
-
-def load_register_key():
-    format_and_print('2.1 Loading the required key for registration', '.', 'left')
-    try:
-        server_public_key = load_key_from_file("pk_bc")  # 加载区块链公钥
-        server_private_key = load_key_from_file("sk_bc")  # 加载区块链私钥
-        server_verify_key = load_key_from_file("pk_sig_bc")  # 加载区块链认证密钥
-        server_sign_key = load_key_from_file('sk_sig_bc')  # 加载区块链签名密钥
-        client_public_key = load_key_from_file('pk_gw')  # 加载网关公钥
-        client_verify_key = load_key_from_file('pk_sig_gw')  # 加载网关认证密钥
-        format_and_print('2.1 Key loaded successfully', '-', 'center')
-        return (server_public_key, server_private_key, server_verify_key,
-                server_sign_key, client_public_key, client_verify_key)
-
-    except KeyboardInterrupt as k:
-        print('KeyboardInterrupt:', k)
-    except ValueError as v:
-        print('ValueError:', v)
-    except TypeError as t:
-        print('TypeError:', t)
-    except IndexError as i:
-        print('IndexError:', i)
-    except AttributeError as a:
-        print('AttributeError:', a)
-    except FileExistsError as f:
-        print('FileExistsError:', f)
+from zerotrustnetworkelement.blockchain.exchange_key import *
 
 
 # 接收网关加密身份信息和网关签名
@@ -100,18 +73,30 @@ def send_gid_and_signature(client_socket, gateway_id, ecc, server_sign_key, serv
 
 
 # 网关身份注册
-def gw_register(client_socket, ecc):
+def gw_register(client_socket):
     format_and_print('2.Starting the Identity Enrollment Process', ':', 'left')
     try:
-        # 加载注册过程需要使用的密钥
-        (server_public_key, server_private_key, server_verify_key, server_sign_key,
-         client_public_key, client_verify_key) = load_register_key()
+        server_private_key, server_public_key, server_sign_key, server_verify_key, ecc = bc_key()
+        tt1, tt2, client_public_key, client_verify_key, exchange_key_duration = pk_exchange(client_socket,
+                                                                                            server_public_key,
+                                                                                            server_verify_key)  # 交换密钥
+        time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
+
         # 接收注册信息，并还原数据类型
         client_hash_info, client_sig, tt1 = receive_gateway_identity(client_socket, ecc, server_private_key,
                                                                      client_public_key)
         # 生成gid，并返回gid注册状态查询结果
         gateway_id = generate_and_check_gid(client_hash_info)
-        # 对不同gid状态进行处理
+
+        folder_path = create_folder(str(gateway_id))
+        save_key_to_file(server_public_key, 'pk_bc', folder_path)
+        save_key_to_file(server_private_key, 'sk_bc', folder_path)
+        save_key_to_file(server_verify_key, 'pk_sig_bc', folder_path)
+        save_key_to_file(server_sign_key, 'sk_sig_bc', folder_path)
+        save_key_to_file(client_public_key, 'pk_gw', folder_path)
+        save_key_to_file(client_verify_key, 'pk_sig_gw', folder_path)
+
+        append_to_json(gateway_id, time_dict1)
         format_and_print('2.4 Start verifying gateway signatures', '.', 'left')
         verify_result = ecc.ecc_verify(client_verify_key, client_sig)  # 验证网关签名
         if verify_result:

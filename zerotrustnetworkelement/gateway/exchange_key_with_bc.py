@@ -3,23 +3,10 @@ from zerotrustnetworkelement.function import *
 
 
 def gw_key():
+    # 生成ECC实例
     ecc = ECC()
-    if os.path.exists("../../experimentation/gw/sk_gw.key") and os.path.exists("../../experimentation/gw/pk_gw.pub"):
-        private_key = load_key_from_file("sk_gw")
-        public_key = load_key_from_file('pk_gw')
-    else:
-        private_key, public_key = ecc.ecc_genkey()
-        save_key_to_file(private_key, "sk_gw")
-        save_key_to_file(public_key, 'pk_gw')
-
-    if os.path.exists("../../experimentation/gw/sk_sig_gw.key") and os.path.exists(
-            "../../experimentation/gw/pk_sig_gw.pub"):
-        signing_key = load_key_from_file("sk_sig_gw")
-        verify_key = load_key_from_file('pk_sig_gw')
-    else:
-        signing_key, verify_key = ecc.ecc_genkey_sign()
-        save_key_to_file(signing_key, "sk_sig_gw")
-        save_key_to_file(verify_key, 'pk_sig_gw')
+    private_key, public_key = ecc.ecc_genkey()
+    signing_key, verify_key = ecc.ecc_genkey_sign()
     return private_key, public_key, signing_key, verify_key, ecc
 
 
@@ -38,12 +25,9 @@ def bc_pk_exchange(client_socket, client_public_key, client_verify_key):
         send_with_header(client_socket, convert_message(client_verify_key, 'bytes'))
 
         exchange_key_end_time = get_timestamp()
-        save_key_to_file(server_public_key, 'pk_bc')
-        save_key_to_file(server_verify_key, 'pk_sig_bc')
-
         format_and_print('1.Key exchange successful', '=', 'center')
-
         exchange_key_duration = exchange_key_end_time - exchange_key_start_time
+
         return server_public_key, server_verify_key, transfer_time1, transfer_time2, exchange_key_duration
     except ConnectionError as conn_err:
         format_and_print(f"Connection error during key exchange: {conn_err}", chr(0x00D7), 'left')

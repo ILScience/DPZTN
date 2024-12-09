@@ -5,21 +5,8 @@ from zerotrustnetworkelement.function import *
 # 生成区块链的对称密钥及公私钥
 def bc_key():
     ecc = ECC()
-    if os.path.exists("sk_bc.key") and os.path.exists("pk_bc.pub"):
-        private_key = load_key_from_file("sk_bc")
-        public_key = load_key_from_file('pk_bc')
-    else:
-        private_key, public_key = ecc.ecc_genkey()
-        save_key_to_file(private_key, "sk_bc")
-        save_key_to_file(public_key, 'pk_bc')
-
-    if os.path.exists("sk_sig_bc.key") and os.path.exists("pk_sig_bc.pub"):
-        signing_key = load_key_from_file("sk_sig_bc")
-        verify_key = load_key_from_file('pk_sig_bc')
-    else:
-        signing_key, verify_key = ecc.ecc_genkey_sign()
-        save_key_to_file(signing_key, "sk_sig_bc")
-        save_key_to_file(verify_key, 'pk_sig_bc')
+    private_key, public_key = ecc.ecc_genkey()
+    signing_key, verify_key = ecc.ecc_genkey_sign()
     return private_key, public_key, signing_key, verify_key, ecc
 
 
@@ -36,13 +23,10 @@ def pk_exchange(client_socket, server_public_key, server_verify_key):
         gateway_public_key = convert_message(data, 'PublicKey')  # 接收网关公钥
         data, transfer_time2 = recv_with_header(client_socket)
         gateway_verify_key = convert_message(data, 'VerifyKey')  # 接收网关认证密钥
-
         exchange_key_end_time = get_timestamp()
-        save_key_to_file(gateway_public_key, 'pk_gw')
-        save_key_to_file(gateway_verify_key, 'pk_sig_gw')
-        format_and_print('1.Key exchange successful', '=', 'center')
         exchange_key_duration = exchange_key_end_time - exchange_key_start_time
-        return transfer_time1, transfer_time2, exchange_key_duration
+        format_and_print('1.Key exchange successful', '=', 'center')
+        return transfer_time1, transfer_time2, gateway_public_key, gateway_verify_key, exchange_key_duration
     except ConnectionError as conn_err:
         format_and_print(f"Connection error during key exchange: {conn_err}", chr(0x00D7), 'left')
     except ValueError as val_err:

@@ -21,14 +21,11 @@ from zerotrustnetworkelement.function import *
 
 
 def gateway_main():
-    # 生成区块链基本信息
-    bc_sk, bc_pk, bc_sk_sig, bc_pk_sig, ecc = bc_key()
     # 与网关建立连接
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bc_ip, bc_port))
     server_socket.listen(5)
     format_and_print(f'blockchain server listening on {bc_ip}:{bc_port}', '.', 'left')
-    gw_hash_info = ''
     while True:
         try:
             gw_socket, gw_addr = server_socket.accept()  # 监听网关
@@ -37,10 +34,6 @@ def gateway_main():
             # 结束进程
             continue
 
-        # 交换密钥
-        tt1, tt2, exchange_key_duration = pk_exchange(gw_socket, bc_pk, bc_pk_sig)
-        time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
-        user_hash_info = ''
         while True:
             try:
                 # 接收请求类型
@@ -50,15 +43,18 @@ def gateway_main():
 
                 # 如果接收到网关身份注册请求
                 if request_type == b"GATEWAY REGISTRATION":
-                    gw_hash_info, gid, verify_result, tt4 = gw_register(gw_socket, ecc)
+
+                    gw_hash_info, gid, verify_result, tt4 = gw_register(gw_socket)
+                    # 创建文件夹，保存公钥私钥
                     register_end_time = get_timestamp()
                     register_duration = register_end_time - request_start_time
                     time_dict2 = {'tt3': tt3, 'tt4': tt4, 'register_duration': register_duration}
-                    append_to_json(gid, time_dict1)
+
                     append_to_json(gid, time_dict2)
 
                 # 如果接收到网关身份认证请求
                 elif request_type == b"GATEWAY AUTHENTICATION":
+
                     gid, result, tt5, tt6, tt7 = gw_auth(gw_socket, gw_hash_info)
                     auth_end_time = get_timestamp()
                     auth_duration = auth_end_time - request_start_time
@@ -83,6 +79,8 @@ def gateway_main():
                     append_to_json(uid, time_dict5)
 
             except KeyboardInterrupt as k:
+                gw_socket.close()
+                server_socket.close()
                 print('0 KeyboardInterrupt:', k)
             except ValueError as v:
                 print('0 ValueError:', v)

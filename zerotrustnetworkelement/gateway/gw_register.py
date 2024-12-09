@@ -1,4 +1,6 @@
 from zerotrustnetworkelement.function import *
+from zerotrustnetworkelement.gateway.exchange_key_with_bc import *
+from zerotrustnetworkelement.gateway.gw_info import *
 
 
 def load_register_key():
@@ -56,22 +58,37 @@ def decrypt_and_verify_data(client_socket, ecc, client_private_key, server_publi
 
 
 # 网关身份注册流程
-def gw_register(client_socket, ecc, client_hash_info, server_pk_sig):
+def gw_register(client_socket):
     format_and_print('2.Starting the Identity Enrollment Process', ':', 'left')
     try:
-        # 获取注册过程中使用的公钥
-        (client_public_key, client_private_key, client_verify_key, client_sign_key,
-         server_public_key, server_verify_key) = load_register_key()
-
         # 发送消息类型
         send_with_header(client_socket, b"GATEWAY REGISTRATION")
+        # 生成网关信息
+        client_hash_info = gw_info_generate()  # 网关身份信息生成
+        client_private_key, client_public_key, client_sign_key, client_verify_key, ecc = gw_key()  # 初始化区块链密钥
+
+        # 交换公钥
+        server_public_key, server_verify_key, tt1, tt2, exchange_key_duration = bc_pk_exchange(client_socket,
+                                                                                               client_public_key,
+                                                                                               client_verify_key)
+        time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
         # 发送网关签名和注册信息
         sign_encrypt_and_send(ecc, client_sign_key, client_hash_info, client_private_key, server_public_key,
                               client_socket)
         # 接收区块链签名
         client_id, server_sig, tt = decrypt_and_verify_data(client_socket, ecc, client_private_key, server_public_key)
         # 验证签名
-        result = ecc.ecc_verify(server_pk_sig, server_sig)
+        append_to_json(client_id, time_dict1)
+        result = ecc.ecc_verify(server_verify_key, server_sig)
+
+        folder_path = create_folder(str(client_id))
+        save_key_to_file(client_public_key, 'pk_gw', folder_path)
+        save_key_to_file(client_private_key, 'sk_gw', folder_path)
+        save_key_to_file(client_verify_key, 'pk_sig_gw', folder_path)
+        save_key_to_file(client_sign_key, 'sk_sig_gw', folder_path)
+        save_key_to_file(server_public_key, 'pk_bc', folder_path)
+        save_key_to_file(server_verify_key, 'pk_sig_bc', folder_path)
+
         return client_id, result, tt
 
     except Exception as e:

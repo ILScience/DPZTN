@@ -1,5 +1,4 @@
-from zerotrustnetworkelement.gateway.exchange_key_with_bc import *
-from zerotrustnetworkelement.gateway.gw_info import *
+
 from zerotrustnetworkelement.gateway.gw_register import *
 from zerotrustnetworkelement.gateway.gw_auth import *
 from gateway_socket_to_user import *
@@ -18,27 +17,20 @@ import psutil
 
 def gateway_main():
     try:
-        # 生成网关信息
-        gw_sk, gw_pk, gw_sk_sig, gw_pk_sig, ecc = gw_key()  # 初始化区块链密钥
-        gw_info, gw_hash_info = gw_info_generate()  # 网关身份信息生成
-
         # 与区块链连接
         gw_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # 创建 socket 对象
         gw_socket.bind((gw_ip, gw_port))  # 绑定ip,port
         gw_socket.connect((bc_ip, bc_port))  # 连接到区块链服务器
         format_and_print(f"Connected to blockchain server at {bc_ip}:{bc_port} from {gw_ip}:{gw_port}", '.', 'left')
 
-        # 交换公钥
-        bc_pk, bc_pk_sig, tt1, tt2, exchange_key_duration = bc_pk_exchange(gw_socket, gw_pk, gw_pk_sig)
-        time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
 
         # 网关注册
         register_start_time = get_timestamp()
-        gid, reg_result, tt3 = gw_register(gw_socket, ecc, gw_hash_info, bc_pk_sig)
+        gid, reg_result, tt3 = gw_register(gw_socket)
         register_end_time = get_timestamp()
         register_duration = register_end_time - register_start_time
         time_dict2 = {'tt3': tt3, 'register_duration': register_duration}
-        append_to_json(gid, time_dict1)
+
         append_to_json(gid, time_dict2)
 
         if reg_result is True:
