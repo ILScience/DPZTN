@@ -2,37 +2,12 @@ from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 
 
-# 3.1 接收网关gid和用户uid
-def recv_gw_gid(client_socket, aes_key):
-    format_and_print('3.1 Start receiving gateway gid', '.', 'left')
-    try:
-        data, transfer_time = recv_with_header(client_socket)
-        gateway_id, user_id = convert_message(aes_decrypt(aes_key, data), 'str').split('||')
-        gateway_id = convert_message(gateway_id, 'UUID')
-        user_id = convert_message(user_id, 'UUID')
-        format_and_print('3.1.Received gateway gid successfully', "_", "center")
-        return gateway_id, user_id, transfer_time
-
-    except KeyboardInterrupt as k:
-        print('3.3 KeyboardInterrupt:', k)
-    except ValueError as v:
-        print('3.3 ValueError:', v)
-    except TypeError as t:
-        print('3.3 TypeError:', t)
-    except IndexError as i:
-        print('3.3 IndexError:', i)
-    except AttributeError as a:
-        print('3.3 AttributeError:', a)
-    except FileExistsError as f:
-        print('3.3 FileExistsError:', f)
-
-
 # 3.2 加载密钥
 def load_auth_key(client_socket, user_hash_info):
     format_and_print('3.2 Start searching for keys required for authentication', '.', 'left')
     try:
         data, transfer_time = recv_with_header(client_socket)
-        gid = convert_message(data, 'UUID')
+        gid = convert_message(convert_message(data, 'str'), 'UUID')
         gateway_folder_path = get_folder_path(str(gid))
         # 查询之前的网关公钥，区块链公钥
         blockchain_public_key = load_key_from_file('pk_bc', gateway_folder_path)
@@ -41,12 +16,14 @@ def load_auth_key(client_socket, user_hash_info):
         blockchain_sign_key = load_key_from_file('sk_sig_bc', gateway_folder_path)
         gateway_public_key = load_key_from_file('pk_gw', gateway_folder_path)
         gateway_verify_key = load_key_from_file('pk_sig_gw', gateway_folder_path)
+        print(gateway_verify_key)
         # 加载用户公钥反馈给网关
         user_hash_info = convert_message(user_hash_info, 'bytes')
+        print(user_hash_info)
         aes_key = generate_aes_key(blockchain_private_key, gateway_public_key)
         format_and_print('3.2 Key required for successful query authentication', "_", "center")
         return (blockchain_public_key, blockchain_private_key, blockchain_verify_key, blockchain_sign_key,
-                gateway_public_key, gateway_verify_key, user_hash_info, aes_key)
+                gateway_public_key, gateway_verify_key, user_hash_info, gid, aes_key)
 
     except KeyboardInterrupt as k:
         print('3.2 KeyboardInterrupt:', k)
@@ -60,6 +37,30 @@ def load_auth_key(client_socket, user_hash_info):
         print('3.2 AttributeError:', a)
     except FileExistsError as f:
         print('3.2 FileExistsError:', f)
+
+
+# 3.1 接收网关gid和用户uid
+def recv_gw_gid(client_socket, aes_key):
+    format_and_print('3.1 Start receiving gateway gid', '.', 'left')
+    try:
+        data, transfer_time = recv_with_header(client_socket)
+        user_id = convert_message(aes_decrypt(aes_key, data), 'str')
+        user_id = convert_message(user_id, 'UUID')
+        format_and_print('3.1.Received gateway gid successfully', "_", "center")
+        return  user_id, transfer_time
+
+    except KeyboardInterrupt as k:
+        print('3.3 KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('3.3 ValueError:', v)
+    except TypeError as t:
+        print('3.3 TypeError:', t)
+    except IndexError as i:
+        print('3.3 IndexError:', i)
+    except AttributeError as a:
+        print('3.3 AttributeError:', a)
+    except FileExistsError as f:
+        print('3.3 FileExistsError:', f)
 
 
 # 3.3 将用户信息返回给网关
@@ -115,9 +116,9 @@ def user_auth(gateway_socket, user_hash_info):
     format_and_print('3. Starting the authentication process', ':', 'left')
     try:
         (blockchain_public_key, blockchain_private_key, blockchain_verify_key, blockchain_sign_key,
-         gateway_public_key, gateway_verify_key, user_hash_info, aes_key) = load_auth_key(gateway_socket,
-                                                                                          user_hash_info)
-        gateway_id, user_id, tt1 = recv_gw_gid(gateway_socket, aes_key)
+         gateway_public_key, gateway_verify_key, user_hash_info, gateway_id, aes_key) = load_auth_key(gateway_socket,
+                                                                                                      user_hash_info)
+        user_id, tt1 = recv_gw_gid(gateway_socket, aes_key)
         send_user_info(gateway_socket, user_hash_info, aes_key)
         auth_result, tt2 = recv_auth_result(gateway_socket)
         format_and_print('3. Auth success', "=", "center")

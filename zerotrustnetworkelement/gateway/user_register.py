@@ -124,7 +124,7 @@ def user_register(gateway_socket, user_socket, gid):
                 save_key_to_file(gateway_pk, 'pk_gateway', user_folder_path)
                 save_key_to_file(gateway_sk, 'sk_gateway', user_folder_path)
                 save_key_to_file(gateway_pk_sig, 'pk_sig_gateway', user_folder_path)
-                save_key_to_file(gateway_sk_sig, 'sk_sig_bc', user_folder_path)
+                save_key_to_file(gateway_sk_sig, 'sk_sig_gateway', user_folder_path)
                 save_key_to_file(user_pk, 'pk_user', user_folder_path)
                 save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
 

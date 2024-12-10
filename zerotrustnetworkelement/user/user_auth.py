@@ -10,7 +10,7 @@ def load_auth_key(user_id):
     try:
         user_folder_path = get_folder_path(str(user_id))
         user_private_key = load_key_from_file("sk_user", user_folder_path)  # 加载用户私钥
-        gateway_public_key = load_key_from_file("pk_gw", user_folder_path)  # 加载网关公钥
+        gateway_public_key = load_key_from_file("pk_gateway", user_folder_path)  # 加载网关公钥
         format_and_print('3.1 Key loaded successfully', '-', 'center')
         return user_private_key, gateway_public_key
     except KeyboardInterrupt as k:

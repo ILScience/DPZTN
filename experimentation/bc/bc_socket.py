@@ -39,7 +39,6 @@ def gateway_main():
                 request_type, tt3 = recv_with_header(gw_socket)
                 request_start_time = get_timestamp()
                 format_and_print(f'Received message type: {request_type}', '-', 'center')
-
                 # 如果接收到网关身份注册请求
                 if request_type == b"GATEWAY REGISTRATION":
 

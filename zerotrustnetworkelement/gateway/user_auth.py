@@ -72,7 +72,7 @@ def send_gid_uid(aes_key_to_bc, gateway_id, user_id, gateway_socket):
     format_and_print('3.3 Start sending gid and uid', '.', 'left')
     try:
         send_with_header(gateway_socket, b"USER AUTHENTICATION")  # 发送消息类型
-        send_with_header(gateway_socket,convert_message(gateway_socket,'bytes'))
+        send_with_header(gateway_socket, convert_message(f'{gateway_id}', 'bytes'))
         message = aes_encrypt(aes_key_to_bc, convert_message(f'{user_id}', 'bytes'))
         send_with_header(gateway_socket, message)
         format_and_print('3.3 Send gid and uid over.', "_", "center")
