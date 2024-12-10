@@ -1,11 +1,35 @@
 [
     {
-        "tt1": 38911800.0,
-        "tt2": 38895500.0,
-        "exchange_key_duration": 83800.0
+        "tt1": 52022300.0,
+        "tt2": 51998800.0,
+        "exchange_key_duration": 117400.0
     },
     {
-        "tt3": 62800.0,
-        "register_duration": 45692000.0
+        "tt3": 87400.0,
+        "register_duration": 58507300.0
+    },
+    {
+        "tt4": 114100.0,
+        "tt5": 134900.0,
+        "auth_duration ": 87248900.0
+    },
+    {
+        "tt1": 51817600.0,
+        "tt2": 51749200.0,
+        "exchange_key_duration": 121400.0
+    },
+    {
+        "tt1": 47257600.0,
+        "tt2": 47232600.0,
+        "exchange_key_duration": 116900.0
+    },
+    {
+        "tt3": 106000.0,
+        "register_duration": 54293600.0
+    },
+    {
+        "tt4": 153000.0,
+        "tt5": 92000.0,
+        "auth_duration ": 94440900.0
     }
 ]

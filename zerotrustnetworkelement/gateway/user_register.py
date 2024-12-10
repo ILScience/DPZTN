@@ -1,23 +1,21 @@
-from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
+from zerotrustnetworkelement.gateway.exchange_key_with_user import *
 
 
 # 2.1 加载密钥（用户公钥、用户验证密钥，网关公钥、网关私钥、网关签名公钥、网关认证密钥）
-def load_register_key():
+def load_register_key(gateway_folder_path):
     format_and_print('2.1 Loading the required key for user registration', '.', 'left')
     try:
-        blockchain_public_key = load_key_from_file('pk_bc')
-        gw_private_key = load_key_from_file('sk_gw')
+        blockchain_public_key = load_key_from_file('pk_bc', gateway_folder_path)
+        gw_private_key = load_key_from_file('sk_gw', gateway_folder_path)
         aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
-        gateway_public_key = load_key_from_file("pk_gateway")  # 加载网关公钥
-        gateway_private_key = load_key_from_file("sk_gateway")  # 加载网关私钥
-        gateway_verify_key = load_key_from_file("pk_sig_gateway")  # 加载网关认证密钥
-        gateway_sign_key = load_key_from_file('sk_sig_gateway')  # 加载网关签名密钥
-        user_public_key = load_key_from_file('pk_user')  # 加载用户公钥
-        user_verify_key = load_key_from_file('pk_sig_user')  # 加载用户认证密钥
+        gateway_public_key = load_key_from_file("pk_gateway", gateway_folder_path)  # 加载网关公钥
+        gateway_private_key = load_key_from_file("sk_gateway", gateway_folder_path)  # 加载网关私钥
+        gateway_verify_key = load_key_from_file("pk_sig_gateway", gateway_folder_path)  # 加载网关认证密钥
+        gateway_sign_key = load_key_from_file('sk_sig_gateway', gateway_folder_path)  # 加载网关签名密钥
+
         format_and_print('2.1 Key loaded successfully', '-', 'center')
-        return (aes_key_to_bc, gateway_public_key, gateway_private_key, gateway_verify_key,
-                gateway_sign_key, user_public_key, user_verify_key)
+        return aes_key_to_bc, gateway_public_key, gateway_private_key, gateway_verify_key, gateway_sign_key
     except Exception as e:
         format_and_print(f'2.1 Error calling load_register_key():{e}', chr(0x00D7), 'left')
 
@@ -57,7 +55,8 @@ def send_gid_and_uinfo(gateway_socket, client_hash_info, aes_key_to_bc, gid):
     format_and_print(f'Send gid and user identity information to the blockchain', '.', 'left')
     try:
         send_with_header(gateway_socket, b"USER REGISTRATION")  # 发送消息类型
-        message2 = aes_encrypt(aes_key_to_bc, convert_message(f'{gid}||{client_hash_info}', 'bytes'))
+        send_with_header(gateway_socket, convert_message(gid, 'bytes'))
+        message2 = aes_encrypt(aes_key_to_bc, convert_message(f'{client_hash_info}', 'bytes'))
         print(message2)
         send_with_header(gateway_socket, message2)
         format_and_print('2.4 Gid and user encrypted message sent.', '-', 'center')
@@ -104,12 +103,36 @@ def generate_gateway_sign(ecc, gateway_sign_key, user_id, gateway_private_key, u
 def user_register(gateway_socket, user_socket, ecc, gid):
     format_and_print(f'2. Start the user registration process.', ':', 'left')
     try:
-        aes_key, gateway_pk, gateway_sk, gateway_sig_pk, gateway_sig_sk, user_pk, user_sig_pk = load_register_key()
+
+        gateway_sk, gateway_pk, gateway_sk_sig, gateway_pk_sig, ecc1 = gw_user_key()
+        # 交换密钥
+        user_pk, user_sig_pk, tt_u1, tt_u2, exchange_key_duration = user_pk_exchange(user_socket,
+                                                                                     gateway_pk,
+                                                                                     gateway_pk_sig)
+        time_dict1 = {'tt_u1': tt_u1, 'tt_u2': tt_u2, 'exchange_key_duration': exchange_key_duration}
+        gateway_folder_path = get_folder_path(str(gid))
+        aes_key, gateway_pk, gateway_sk, gateway_sig_pk, gateway_sig_sk = load_register_key(gateway_folder_path)
         client_hash_info, client_sig, tt_u = receive_user_info(user_socket, ecc, gateway_sk, user_pk)
         verify_result = verify_user_sign(ecc, user_sig_pk, client_sig)
         if verify_result:
             send_gid_and_uinfo(gateway_socket, client_hash_info, aes_key, gid)
             user_id, tt_b = recv_uid_from_bc(gateway_socket, aes_key)
+
+            user_folder_path = get_folder_path(str(user_id))
+            if os.path.exists(user_folder_path):
+                format_and_print(f'Gateway is registered', chr(0x00D7), 'left')
+            else:
+                # 创建文件夹
+                os.makedirs(user_folder_path)
+                save_key_to_file(gateway_pk, 'pk_gateway', user_folder_path)
+                save_key_to_file(gateway_sk, 'sk_gateway', user_folder_path)
+                save_key_to_file(gateway_sig_pk, 'pk_sig_gateway', user_folder_path)
+                save_key_to_file(gateway_sig_sk, 'sk_sig_bc', user_folder_path)
+                save_key_to_file(user_pk, 'pk_user', user_folder_path)
+                save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
+
+            append_to_json(user_id, time_dict1)
+
             generate_gateway_sign(ecc, gateway_sig_sk, user_id, gateway_sk, user_pk, user_socket)
             format_and_print('2. Identity Registration Successful', "=", "center")
             return user_id, tt_u, tt_b

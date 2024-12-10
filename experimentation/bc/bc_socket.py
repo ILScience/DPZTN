@@ -49,7 +49,6 @@ def gateway_main():
                     register_end_time = get_timestamp()
                     register_duration = register_end_time - request_start_time
                     time_dict2 = {'tt3': tt3, 'tt4': tt4, 'register_duration': register_duration}
-
                     append_to_json(gid, time_dict2)
 
                 # 如果接收到网关身份认证请求

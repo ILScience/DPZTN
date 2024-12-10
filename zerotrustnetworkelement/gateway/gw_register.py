@@ -81,15 +81,20 @@ def gw_register(client_socket):
         append_to_json(client_id, time_dict1)
         result = ecc.ecc_verify(server_verify_key, server_sig)
 
-        folder_path = create_folder(str(client_id))
-        save_key_to_file(client_public_key, 'pk_gw', folder_path)
-        save_key_to_file(client_private_key, 'sk_gw', folder_path)
-        save_key_to_file(client_verify_key, 'pk_sig_gw', folder_path)
-        save_key_to_file(client_sign_key, 'sk_sig_gw', folder_path)
-        save_key_to_file(server_public_key, 'pk_bc', folder_path)
-        save_key_to_file(server_verify_key, 'pk_sig_bc', folder_path)
-
-        return client_id, result, tt
+        folder_path = get_folder_path(str(client_id))
+        # 判断文件夹是否存在
+        if os.path.exists(folder_path):
+            format_and_print(f'Gateway is registered', chr(0x00D7), 'left')
+        else:
+            # 创建文件夹
+            os.makedirs(folder_path)
+            save_key_to_file(client_public_key, 'pk_gw', folder_path)
+            save_key_to_file(client_private_key, 'sk_gw', folder_path)
+            save_key_to_file(client_verify_key, 'pk_sig_gw', folder_path)
+            save_key_to_file(client_sign_key, 'sk_sig_gw', folder_path)
+            save_key_to_file(server_public_key, 'pk_bc', folder_path)
+            save_key_to_file(server_verify_key, 'pk_sig_bc', folder_path)
+            return client_id, result, tt
 
     except Exception as e:
         format_and_print(f'2.Identity registration failure:{e}', chr(0x00D7), 'left')

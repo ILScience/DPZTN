@@ -1,4 +1,3 @@
-
 from zerotrustnetworkelement.gateway.gw_register import *
 from zerotrustnetworkelement.gateway.gw_auth import *
 from gateway_socket_to_user import *
@@ -22,7 +21,6 @@ def gateway_main():
         gw_socket.bind((gw_ip, gw_port))  # 绑定ip,port
         gw_socket.connect((bc_ip, bc_port))  # 连接到区块链服务器
         format_and_print(f"Connected to blockchain server at {bc_ip}:{bc_port} from {gw_ip}:{gw_port}", '.', 'left')
-
 
         # 网关注册
         register_start_time = get_timestamp()
@@ -67,7 +65,6 @@ def user_main_zl(auth_result, gid, gateway_socket):
     try:
         if auth_result:
             user_main(gid, gateway_socket)
-
         else:
             print('gateway auth failed!')
 

@@ -88,13 +88,18 @@ def gw_register(client_socket):
         # 生成gid，并返回gid注册状态查询结果
         gateway_id = generate_and_check_gid(client_hash_info)
 
-        folder_path = create_folder(str(gateway_id))
-        save_key_to_file(server_public_key, 'pk_bc', folder_path)
-        save_key_to_file(server_private_key, 'sk_bc', folder_path)
-        save_key_to_file(server_verify_key, 'pk_sig_bc', folder_path)
-        save_key_to_file(server_sign_key, 'sk_sig_bc', folder_path)
-        save_key_to_file(client_public_key, 'pk_gw', folder_path)
-        save_key_to_file(client_verify_key, 'pk_sig_gw', folder_path)
+        folder_path = get_folder_path(str(gateway_id))
+        if os.path.exists(folder_path):
+            format_and_print(f'Gateway is registered', chr(0x00D7), 'left')
+        else:
+            # 创建文件夹
+            os.makedirs(folder_path)
+            save_key_to_file(server_public_key, 'pk_bc', folder_path)
+            save_key_to_file(server_private_key, 'sk_bc', folder_path)
+            save_key_to_file(server_verify_key, 'pk_sig_bc', folder_path)
+            save_key_to_file(server_sign_key, 'sk_sig_bc', folder_path)
+            save_key_to_file(client_public_key, 'pk_gw', folder_path)
+            save_key_to_file(client_verify_key, 'pk_sig_gw', folder_path)
 
         append_to_json(gateway_id, time_dict1)
         format_and_print('2.4 Start verifying gateway signatures', '.', 'left')

@@ -4,11 +4,15 @@ from zerotrustnetworkelement.blockchain.bc_function import *
 
 
 # 2.1 加载密钥
-def load_key():
+def load_key(client_socket):
     format_and_print('2.1 Loading the required key for registration', '.', 'left')
     try:
-        server_private_key = load_key_from_file("sk_bc")  # 加载区块链私钥
-        client_public_key = load_key_from_file('pk_gw')  # 加载网关公钥
+        data, transfer_time = recv_with_header(client_socket)
+        gid = convert_message(data, 'UUID')
+        gateway_folder_path = get_folder_path(str(gid))
+
+        server_private_key = load_key_from_file("sk_bc", gateway_folder_path)  # 加载区块链私钥
+        client_public_key = load_key_from_file('pk_gw', gateway_folder_path)  # 加载网关公钥
         format_and_print('2.1 Key loaded successfully', '-', 'center')
         return server_private_key, client_public_key
 
@@ -27,15 +31,13 @@ def load_key():
 
 
 # 2.2接收用户加密消息和gid，验证gid状态，生成uid
-def receive_user_identity(client_socket, server_private_key):
+def receive_user_identity(client_socket, server_private_key, client_public_key):
     format_and_print('2.2 Start receiving user encrypted identities and user signatures', '.', 'left')
     try:
-        client_public_key = load_key_from_file('pk_gw')  # 加载网关公钥
-
         aes_key = generate_aes_key(server_private_key, client_public_key)  # 生成aes密钥
 
         data, transfer_time = recv_with_header(client_socket)
-        gateway_id, user_hash_info = convert_message(aes_decrypt(aes_key, data), 'str').split("||")  # 消息解密
+        user_hash_info = convert_message(aes_decrypt(aes_key, data), 'str')  # 消息解密
         user_id = generate_gid(user_hash_info)  # 将用户身份加密消息，由str转换成bytes
 
         format_and_print('2.2 User encrypted identity information and user signature received successfully', '-',
@@ -74,10 +76,11 @@ def send_uid_to_gateway(server_private_key, client_public_key, user_id, client_s
         print('2.3 AttributeError:', a)
 
 
-def user_register(client_socket):
+def user_register(client_socket, gid):
     try:
-        server_private_key, client_public_key = load_key()
-        user_hash_info, uid, tt1 = receive_user_identity(client_socket, server_private_key)
+        gateway_folder_path = get_folder_path(str(gid))
+        server_private_key, client_public_key = load_key(gateway_folder_path)
+        user_hash_info, uid, tt1 = receive_user_identity(client_socket, server_private_key, client_public_key)
         send_uid_to_gateway(server_private_key, client_public_key, uid, client_socket)
         return user_hash_info, uid, tt1
 

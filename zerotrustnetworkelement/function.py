@@ -46,6 +46,17 @@ def format_and_print(text, symbol, alignment):
     print(result)
 
 
+def get_folder_path(folder_name: str) -> str:
+    # 获取当前工作目录
+    current_dir = os.getcwd()
+    # 创建文件夹路径
+    folder_path = os.path.join(current_dir, folder_name)
+
+    # 标准化路径，确保路径没有多余的分隔符
+    folder_path = os.path.normpath(folder_path)
+    return folder_path
+
+
 # 保存密钥到本地文件
 def save_key_to_file(key, filename, folder_path):
     # 根据密钥类型判断文件后缀
@@ -57,10 +68,6 @@ def save_key_to_file(key, filename, folder_path):
         key_type = 'public'
     else:
         raise ValueError("The key must be an instance of PrivateKey, SigningKey or PublicKey, VerifyKey.")
-
-    # 确保目录存在
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
     try:
         # 保存密钥到文件
         with open(file_path, 'wb') as key_file:
@@ -70,9 +77,9 @@ def save_key_to_file(key, filename, folder_path):
         raise ValueError(f"Failed to save {key_type} key to {file_path}: {e}")
 
 
-def load_key_from_file(filename):
-    private_key_path = f'./{filename}.key'
-    public_key_path = f'./{filename}.pub'
+def load_key_from_file(filename, folder_path):
+    private_key_path = os.path.join(folder_path, f'{filename}.key')
+    public_key_path = os.path.join(folder_path, f'{filename}.pub')
 
     # 判断是否是 .key 文件
     if os.path.exists(private_key_path):
@@ -342,20 +349,3 @@ def monitor_resources(process, output_file="resource_usage.csv", duration=10):
 
             # # 打印到控制台（可选）
             # print(f"CPU使用率: {cpu_usage}% | 内存使用: {memory_usage:.2f} MB")
-
-def create_folder(folder_name:str)->str:
-    # 获取当前工作目录
-    current_dir = os.getcwd()
-    # 创建文件夹路径
-    folder_path = os.path.join(current_dir, folder_name)
-
-    # 标准化路径，确保路径没有多余的分隔符
-    folder_path = os.path.normpath(folder_path)
-
-    # 判断文件夹是否存在
-    if os.path.exists(folder_path):
-        return f"已经存在{folder_name}"
-    else:
-        # 创建文件夹
-        os.makedirs(folder_path)
-        return folder_path

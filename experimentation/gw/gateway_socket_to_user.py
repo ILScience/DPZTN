@@ -1,5 +1,4 @@
 import socket
-from zerotrustnetworkelement.gateway.exchange_key_with_user import *
 from zerotrustnetworkelement.gateway.gw_configure import *
 from zerotrustnetworkelement.gateway.user_register import *
 from zerotrustnetworkelement.gateway.user_auth import *
@@ -7,7 +6,7 @@ from zerotrustnetworkelement.gateway.user_auth import *
 
 def user_main(gid, gateway_socket):
     try:
-        gateway_sk, gateway_pk, gateway_sk_sig, gateway_pk_sig, ecc1 = gw_user_key()
+
         # 与用户建立连接
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((gateway_ip, gateway_port))
@@ -15,9 +14,7 @@ def user_main(gid, gateway_socket):
         format_and_print(f'blockchain server listening on {gateway_ip}:{gateway_port}', '.', 'left')
         while True:
             user_socket, user_addr = server_socket.accept()
-            # 交换密钥
-            tt_u1, tt_u2, exchange_key_duration = user_pk_exchange(user_socket, gateway_pk, gateway_pk_sig)
-            time_dict1 = {'tt_u1': tt_u1, 'tt_u2': tt_u2, 'exchange_key_duration': exchange_key_duration}
+
             # 监听用户请求
             while True:
                 try:
@@ -27,11 +24,11 @@ def user_main(gid, gateway_socket):
                     format_and_print(f'Received message type: {request_type}', '-', 'center')
 
                     if request_type == b"USER REGISTRATION":
-                        uid, tt_u3, tt_b1 = user_register(gateway_socket, user_socket, ecc1, gid)
+                        uid, tt_u3, tt_b1 = user_register(gateway_socket, user_socket, gid)
                         register_end_time = get_timestamp()
                         user_register_duration = register_end_time - request_start_time
                         time_dict2 = {'tt_u3': tt_u3, 'tt_b1': tt_b1, 'user_register_duration': user_register_duration}
-                        append_to_json(uid, time_dict1)
+
                         append_to_json(uid, time_dict2)
                     elif request_type == b'USER AUTHENTICATION':
                         uid, aes_key_to_user, result, tt_u4, tt_b2, tt_u5, tt_u6 = user_auth(user_socket,
@@ -65,4 +62,3 @@ def user_main(gid, gateway_socket):
         print('IndexError:', i)
     except AttributeError as a:
         print('AttributeError:', a)
-

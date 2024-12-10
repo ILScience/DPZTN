@@ -5,11 +5,11 @@ from zerotrustnetworkelement.gateway.gw_function import *
 from zerotrustnetworkelement.encryption.myhash import *
 
 
-def load_auth_key():
+def load_auth_key(folder_path):
     format_and_print('3.1 Loading the required key for auth', '.', 'left')
     try:
-        client_private_key = load_key_from_file("sk_gw")  # 加载区块链私钥
-        server_public_key = load_key_from_file("pk_bc")  # 加载区块链公钥
+        client_private_key = load_key_from_file("sk_gw", folder_path)  # 加载区块链私钥
+        server_public_key = load_key_from_file("pk_bc", folder_path)  # 加载区块链公钥
         format_and_print('3.1 Key loaded successfully', '-', 'center')
         return client_private_key, server_public_key
     except Exception as e:
@@ -57,7 +57,7 @@ def generate_proof_send(client_zk, client_hash_info1, token, aes_key, client_soc
         format_and_print(f'3.4 Error calling generate_proof_send():{e}', chr(0x00D7), 'left')
 
 
-# 接收服务器的验证结果
+# 3.5 接收服务器的验证结果
 def recv_auth_result(aes_key, client_socket):
     format_and_print('3.5 Start receiving authentication results', '.', 'left')
     try:
@@ -76,8 +76,9 @@ def recv_auth_result(aes_key, client_socket):
 def gw_auth(client_socket, client_id):
     format_and_print('3.Starting the authentication process', ':', 'left')
     try:
+        folder_path = get_folder_path(str(client_id))
         # 获取认证过程中使用的公钥
-        client_private_key, server_public_key = load_auth_key()
+        client_private_key, server_public_key = load_auth_key(folder_path)
         send_with_header(client_socket, b"GATEWAY AUTHENTICATION")  # 发送消息类型
         send_with_header(client_socket, convert_message(f"{client_id}", 'bytes'))  # 发送gid
         aes_key = generate_aes_key(client_private_key, server_public_key)  # 生成会话密钥
