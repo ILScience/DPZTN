@@ -1,6 +1,5 @@
 import threading
 import psutil
-from zerotrustnetworkelement.blockchain.exchange_key import *
 from zerotrustnetworkelement.blockchain.gw_register import *
 from zerotrustnetworkelement.blockchain.gw_auth import *
 from zerotrustnetworkelement.blockchain.connection import *

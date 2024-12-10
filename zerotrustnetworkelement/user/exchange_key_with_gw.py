@@ -4,23 +4,8 @@ from zerotrustnetworkelement.function import *
 
 def user_key():
     ecc = ECC()
-    if os.path.exists("../../experimentation/user/sk_user.key") and os.path.exists(
-            "../../experimentation/user/pk_user.pub"):
-        private_key = load_key_from_file("sk_user")
-        public_key = load_key_from_file('pk_user')
-    else:
-        private_key, public_key = ecc.ecc_genkey()
-        save_key_to_file(private_key, "sk_user")
-        save_key_to_file(public_key, 'pk_user')
-
-    if os.path.exists("../../experimentation/user/sk_sig_user.key") and os.path.exists(
-            "../../experimentation/user/pk_sig_user.pub"):
-        signing_key = load_key_from_file("sk_sig_user")
-        verify_key = load_key_from_file('pk_sig_user')
-    else:
-        signing_key, verify_key = ecc.ecc_genkey_sign()
-        save_key_to_file(signing_key, "sk_sig_user")
-        save_key_to_file(verify_key, 'pk_sig_user')
+    private_key, public_key = ecc.ecc_genkey()
+    signing_key, verify_key = ecc.ecc_genkey_sign()
     return private_key, public_key, signing_key, verify_key, ecc
 
 
@@ -39,9 +24,6 @@ def pk_exchange(client_socket, client_public_key, client_verify_key):
         send_with_header(client_socket, convert_message(client_verify_key, 'bytes'))
 
         exchange_key_end_time = get_timestamp()
-        save_key_to_file(server_public_key, 'pk_gw')
-        save_key_to_file(server_verify_key, 'pk_sig_gw')
-
         format_and_print('1.Key exchange successful', '=', 'center')
 
         exchange_key_duration = exchange_key_end_time - exchange_key_start_time

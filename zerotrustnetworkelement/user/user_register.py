@@ -1,21 +1,5 @@
-from zerotrustnetworkelement.function import *
-
-
-# 2.1 加载注册密钥
-def load_register_key():
-    format_and_print('2.1 Loading the required key for registration', '.', 'left')
-    try:
-        client_public_key = load_key_from_file('pk_user')  # 加载网关公钥
-        client_private_key = load_key_from_file("sk_user")  # 加载区块链私钥
-        client_verify_key = load_key_from_file('pk_sig_user')  # 加载网关认证密钥
-        client_sign_key = load_key_from_file('sk_sig_user')  # 加载区块链签名密钥
-        server_public_key = load_key_from_file("pk_gw")  # 加载区块链公钥
-        server_verify_key = load_key_from_file("pk_sig_gw")  # 加载区块链认证密钥
-        format_and_print('2.1 Key loaded successfully', '-', 'center')
-        return (client_public_key, client_private_key, client_verify_key,
-                client_sign_key, server_public_key, server_verify_key)
-    except Exception as e:
-        format_and_print(f'2.1 Error calling load_register_key():{e}', chr(0x00D7), 'left')
+from zerotrustnetworkelement.user.exchange_key_with_gw import *
+from zerotrustnetworkelement.user.user_info import *
 
 
 # 2.2 发送用户签名和用户加密消息
@@ -60,28 +44,53 @@ def decrypt_and_verify_data(client_socket, ecc, client_private_key, server_publi
 
         format_and_print('2.3 Receive blockchain signature and verify success', "-", "center")
         return client_id, server_sig, transfer_time
-    except Exception as e:
-        format_and_print(f'2.3 Error calling decrypt_and_verify_data():{e}', chr(0x00D7), 'left')
-
+    except KeyboardInterrupt as k:
+        print('KeyboardInterrupt:', k)
+    except ValueError as v:
+        print('ValueError:', v)
+    except TypeError as t:
+        print('TypeError:', t)
+    except IndexError as i:
+        print('IndexError:', i)
+    except AttributeError as a:
+        print('AttributeError:', a)
 
 # 2 网关身份注册流程
-def user_register(client_socket, ecc, client_hash_info, server_pk_sig):
+def user_register(client_socket):
     format_and_print('2 Starting the Identity Enrollment Process', ':', 'left')
     try:
-        # 获取注册过程中使用的公钥
-        (client_public_key, client_private_key, client_verify_key, client_sign_key,
-         server_public_key, server_verify_key) = load_register_key()
-
         # 发送消息类型
         send_with_header(client_socket, b"USER REGISTRATION")
+        client_hash_info = user_info_generate()
+        client_private_key, client_public_key, client_sign_key, client_verify_key, ecc = user_key()
+        # 交换公钥
+        server_public_key, server_verify_key, tt1, tt2, exchange_key_duration = pk_exchange(client_socket,
+                                                                                            client_public_key,
+                                                                                            client_verify_key)
+        time_dict1 = {'tt1': tt1, 'tt2': tt2, 'exchange_key_duration': exchange_key_duration}
+        print(time_dict1)
         # 发送网关签名和注册信息
         sign_encrypt_and_send(ecc, client_sign_key, client_hash_info, client_private_key, server_public_key,
                               client_socket)
         # 接收区块链签名
         client_id, server_sig, tt = decrypt_and_verify_data(client_socket, ecc, client_private_key, server_public_key)
         # 验证签名
-        result = ecc.ecc_verify(server_pk_sig, server_sig)
-        return client_id, result, tt
+        result = ecc.ecc_verify(server_verify_key, server_sig)
+        append_to_json(client_id, time_dict1)
+        folder_path = get_folder_path(str(client_id))
+        # 判断文件夹是否存在
+        if os.path.exists(folder_path):
+            format_and_print(f'Gateway is registered', chr(0x00D7), 'left')
+        else:
+            # 创建文件夹
+            os.makedirs(folder_path)
+            save_key_to_file(client_public_key, 'pk_user', folder_path)
+            save_key_to_file(client_private_key, 'sk_user', folder_path)
+            save_key_to_file(client_verify_key, 'pk_sig_user', folder_path)
+            save_key_to_file(client_sign_key, 'sk_sig_user', folder_path)
+            save_key_to_file(server_public_key, 'pk_gateway', folder_path)
+            save_key_to_file(server_verify_key, 'pk_sig_gateway', folder_path)
+            return client_id, result, tt
 
     except Exception as e:
         format_and_print(f'2 Identity registration failure:{e}', chr(0x00D7), 'left')

@@ -6,7 +6,6 @@ from zerotrustnetworkelement.gateway.user_auth import *
 
 def user_main(gid, gateway_socket):
     try:
-
         # 与用户建立连接
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.bind((gateway_ip, gateway_port))

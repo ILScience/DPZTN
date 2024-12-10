@@ -5,11 +5,12 @@ from zerotrustnetworkelement.encryption.myhash import *
 from zerotrustnetworkelement.function import *
 
 
-def load_auth_key():
+def load_auth_key(user_id):
     format_and_print('3.1 Loading the required key for auth', '.', 'left')
     try:
-        user_private_key = load_key_from_file("sk_user")  # 加载用户私钥
-        gateway_public_key = load_key_from_file("pk_gw")  # 加载网关公钥
+        user_folder_path = get_folder_path(str(user_id))
+        user_private_key = load_key_from_file("sk_user", user_folder_path)  # 加载用户私钥
+        gateway_public_key = load_key_from_file("pk_gw", user_folder_path)  # 加载网关公钥
         format_and_print('3.1 Key loaded successfully', '-', 'center')
         return user_private_key, gateway_public_key
     except KeyboardInterrupt as k:
@@ -46,7 +47,6 @@ def send_user_sign(client_hash_info1, aes_key, client_socket):
         print('IndexError:', i)
     except AttributeError as a:
         print('AttributeError:', a)
-
 
 
 # 3.3 接收区块链发送的 token
@@ -118,7 +118,7 @@ def user_auth(client_socket, client_id):
     format_and_print('3.Starting the authentication process', ':', 'left')
     try:
         # 获取认证过程中使用的公钥
-        client_private_key, server_public_key = load_auth_key()
+        client_private_key, server_public_key = load_auth_key(client_id)
         send_with_header(client_socket, b"USER AUTHENTICATION")  # 发送消息类型
         send_with_header(client_socket, convert_message(f"{client_id}", 'bytes'))  # 发送uid
         aes_key = generate_aes_key(client_private_key, server_public_key)  # 生成会话密钥

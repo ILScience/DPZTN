@@ -1,22 +1,5 @@
-from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.gateway.exchange_key_with_bc import *
 from zerotrustnetworkelement.gateway.gw_info import *
-
-
-def load_register_key():
-    format_and_print('2.1 Loading the required key for registration', '.', 'left')
-    try:
-        client_public_key = load_key_from_file('pk_gw')  # 加载网关公钥
-        client_private_key = load_key_from_file("sk_gw")  # 加载区块链私钥
-        client_verify_key = load_key_from_file('pk_sig_gw')  # 加载网关认证密钥
-        client_sign_key = load_key_from_file('sk_sig_gw')  # 加载区块链签名密钥
-        server_public_key = load_key_from_file("pk_bc")  # 加载区块链公钥
-        server_verify_key = load_key_from_file("pk_sig_bc")  # 加载区块链认证密钥
-        format_and_print('2.1 Key loaded successfully', '-', 'center')
-        return (client_public_key, client_private_key, client_verify_key,
-                client_sign_key, server_public_key, server_verify_key)
-    except Exception as e:
-        format_and_print(f'2.1 Error calling load_register_key():{e}', chr(0x00D7), 'left')
 
 
 def sign_encrypt_and_send(ecc, client_sign_key, client_hash_info, client_private_key, server_public_key, client_socket):

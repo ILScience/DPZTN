@@ -8,10 +8,10 @@ def load_key(client_socket):
     format_and_print('2.1 Loading the required key for registration', '.', 'left')
     try:
         data, transfer_time = recv_with_header(client_socket)
-        gid = convert_message(data, 'UUID')
+        gid = convert_message(convert_message(data, 'str'), 'UUID')
         gateway_folder_path = get_folder_path(str(gid))
 
-        server_private_key = load_key_from_file("sk_bc", gateway_folder_path)  # 加载区块链私钥
+        server_private_key = load_key_from_file('sk_bc', gateway_folder_path)  # 加载区块链私钥
         client_public_key = load_key_from_file('pk_gw', gateway_folder_path)  # 加载网关公钥
         format_and_print('2.1 Key loaded successfully', '-', 'center')
         return server_private_key, client_public_key
@@ -76,10 +76,9 @@ def send_uid_to_gateway(server_private_key, client_public_key, user_id, client_s
         print('2.3 AttributeError:', a)
 
 
-def user_register(client_socket, gid):
+def user_register(client_socket):
     try:
-        gateway_folder_path = get_folder_path(str(gid))
-        server_private_key, client_public_key = load_key(gateway_folder_path)
+        server_private_key, client_public_key = load_key(client_socket)
         user_hash_info, uid, tt1 = receive_user_identity(client_socket, server_private_key, client_public_key)
         send_uid_to_gateway(server_private_key, client_public_key, uid, client_socket)
         return user_hash_info, uid, tt1

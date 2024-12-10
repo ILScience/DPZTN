@@ -27,28 +27,26 @@ def recv_uid(client_socket):
 
 
 # 3.2 加载密钥
-def load_auth_key():
+def load_auth_key(uid, gid):
     format_and_print('3.2 Start searching for keys required for authentication', '.', 'left')
     try:
         # 查询之前的网关公钥，区块链公钥
-        blockchain_public_key = load_key_from_file('pk_bc')
-        blockchain_verify_key = load_key_from_file('pk_sig_bc')
-        gw_public_key = load_key_from_file('pk_gw')
-        gw_private_key = load_key_from_file('sk_gw')
-        gw_verify_key = load_key_from_file('pk_sig_gw')
-        gw_sign_key = load_key_from_file('sk_sig_gw')
+        gateway_folder_path = get_folder_path(str(gid))
+        blockchain_public_key = load_key_from_file('pk_bc', gateway_folder_path)
+        blockchain_verify_key = load_key_from_file('pk_sig_bc', gateway_folder_path)
+        gw_public_key = load_key_from_file('pk_gw', gateway_folder_path)
+        gw_private_key = load_key_from_file('sk_gw', gateway_folder_path)
+        gw_verify_key = load_key_from_file('pk_sig_gw', gateway_folder_path)
+        gw_sign_key = load_key_from_file('sk_sig_gw', gateway_folder_path)
         aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
 
-        blockchain_public_key = load_key_from_file('pk_bc')
-        gw_private_key = load_key_from_file('sk_gw')
-        aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
-
-        gateway_public_key = load_key_from_file('pk_gateway')
-        gateway_private_key = load_key_from_file('sk_gateway')
-        gateway_verify_key = load_key_from_file('pk_sig_gateway')
-        gateway_sign_key = load_key_from_file('sk_sig_gateway')
-        user_public_key = load_key_from_file('pk_user')
-        user_verify_key = load_key_from_file('pk_sig_user')  # 加载用户认证密钥
+        user_folder_path = get_folder_path(str(uid))
+        gateway_public_key = load_key_from_file('pk_gateway', user_folder_path)
+        gateway_private_key = load_key_from_file('sk_gateway', user_folder_path)
+        gateway_verify_key = load_key_from_file('pk_sig_gateway', user_folder_path)
+        gateway_sign_key = load_key_from_file('sk_sig_gateway', user_folder_path)
+        user_public_key = load_key_from_file('pk_user', user_folder_path)
+        user_verify_key = load_key_from_file('pk_sig_user', user_folder_path)  # 加载用户认证密钥
         aes_key_to_user = generate_aes_key(gateway_private_key, user_public_key)
 
         format_and_print('3.2 Key required for successful query authentication', "_", "center")
@@ -74,7 +72,8 @@ def send_gid_uid(aes_key_to_bc, gateway_id, user_id, gateway_socket):
     format_and_print('3.3 Start sending gid and uid', '.', 'left')
     try:
         send_with_header(gateway_socket, b"USER AUTHENTICATION")  # 发送消息类型
-        message = aes_encrypt(aes_key_to_bc, convert_message(f'{gateway_id}||{user_id}', 'bytes'))
+        send_with_header(gateway_socket,convert_message(gateway_socket,'bytes'))
+        message = aes_encrypt(aes_key_to_bc, convert_message(f'{user_id}', 'bytes'))
         send_with_header(gateway_socket, message)
         format_and_print('3.3 Send gid and uid over.', "_", "center")
     except KeyboardInterrupt as k:
@@ -252,7 +251,8 @@ def user_auth(user_socket, gateway_socket, gid):
         user_id, tt_u1 = recv_uid(user_socket)
         (blockchain_public_key, blockchain_verify_key, gw_public_key, gw_private_key,
          gw_verify_key, gw_sign_key, aes_key_to_bc, gateway_public_key, gateway_private_key,
-         gateway_verify_key, gateway_sign_key, user_public_key, user_verify_key, aes_key_to_user) = load_auth_key()
+         gateway_verify_key, gateway_sign_key, user_public_key, user_verify_key, aes_key_to_user) = load_auth_key(
+            user_id, gid)
         send_gid_uid(aes_key_to_bc, gid, user_id, gateway_socket)
         user_hash_info, tt_b1 = recv_user_info(gateway_socket, aes_key_to_bc)
 

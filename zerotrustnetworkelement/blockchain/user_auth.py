@@ -28,16 +28,19 @@ def recv_gw_gid(client_socket, aes_key):
 
 
 # 3.2 加载密钥
-def load_auth_key(user_hash_info):
+def load_auth_key(client_socket, user_hash_info):
     format_and_print('3.2 Start searching for keys required for authentication', '.', 'left')
     try:
+        data, transfer_time = recv_with_header(client_socket)
+        gid = convert_message(data, 'UUID')
+        gateway_folder_path = get_folder_path(str(gid))
         # 查询之前的网关公钥，区块链公钥
-        blockchain_public_key = load_key_from_file('pk_bc')
-        blockchain_private_key = load_key_from_file('sk_bc')
-        blockchain_verify_key = load_key_from_file('pk_sig_bc')
-        blockchain_sign_key = load_key_from_file('sk_sig_bc')
-        gateway_public_key = load_key_from_file('pk_gw')
-        gateway_verify_key = load_key_from_file('pk_sig_gw')
+        blockchain_public_key = load_key_from_file('pk_bc', gateway_folder_path)
+        blockchain_private_key = load_key_from_file('sk_bc', gateway_folder_path)
+        blockchain_verify_key = load_key_from_file('pk_sig_bc', gateway_folder_path)
+        blockchain_sign_key = load_key_from_file('sk_sig_bc', gateway_folder_path)
+        gateway_public_key = load_key_from_file('pk_gw', gateway_folder_path)
+        gateway_verify_key = load_key_from_file('pk_sig_gw', gateway_folder_path)
         # 加载用户公钥反馈给网关
         user_hash_info = convert_message(user_hash_info, 'bytes')
         aes_key = generate_aes_key(blockchain_private_key, gateway_public_key)
@@ -112,7 +115,8 @@ def user_auth(gateway_socket, user_hash_info):
     format_and_print('3. Starting the authentication process', ':', 'left')
     try:
         (blockchain_public_key, blockchain_private_key, blockchain_verify_key, blockchain_sign_key,
-         gateway_public_key, gateway_verify_key, user_hash_info, aes_key) = load_auth_key(user_hash_info)
+         gateway_public_key, gateway_verify_key, user_hash_info, aes_key) = load_auth_key(gateway_socket,
+                                                                                          user_hash_info)
         gateway_id, user_id, tt1 = recv_gw_gid(gateway_socket, aes_key)
         send_user_info(gateway_socket, user_hash_info, aes_key)
         auth_result, tt2 = recv_auth_result(gateway_socket)
