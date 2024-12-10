@@ -60,6 +60,7 @@ def gw_register(client_socket):
                               client_socket)
         # 接收区块链签名
         client_id, server_sig, tt = decrypt_and_verify_data(client_socket, ecc, client_private_key, server_public_key)
+
         # 验证签名
         append_to_json(client_id, time_dict1)
         result = ecc.ecc_verify(server_verify_key, server_sig)

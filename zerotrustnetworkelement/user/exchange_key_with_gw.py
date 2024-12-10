@@ -9,6 +9,7 @@ def user_key():
     return private_key, public_key, signing_key, verify_key, ecc
 
 
+
 # 与网关建立连接并交换公钥
 def pk_exchange(client_socket, client_public_key, client_verify_key):
     format_and_print('1.Exchanging Key', ':', 'left')

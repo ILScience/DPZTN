@@ -24,12 +24,12 @@ def gateway_main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bc_ip, bc_port))
     server_socket.listen(5)
-    format_and_print(f'blockchain server listening on {bc_ip}:{bc_port}', '.', 'left')
+    format_and_print(f'blockchain server listening on {bc_ip}:{bc_port}', '.')
     while True:
         try:
             gw_socket, gw_addr = server_socket.accept()  # 监听网关
         except Exception as e:
-            format_and_print(f'Error in Listening Gateway:{e}', chr(0x00D7), 'left')
+            format_and_print(f'Error in Listening Gateway:{e}')
             # 结束进程
             continue
 
@@ -41,24 +41,20 @@ def gateway_main():
                 format_and_print(f'Received message type: {request_type}', '-', 'center')
                 # 如果接收到网关身份注册请求
                 if request_type == b"GATEWAY REGISTRATION":
-
-                    gw_hash_info, gid, verify_result, tt4 = gw_register(gw_socket)
+                    tt1, tt2, tt3, gw_hash_info, gid, verify_result = gw_register(gw_socket)
                     # 创建文件夹，保存公钥私钥
                     register_end_time = get_timestamp()
                     register_duration = register_end_time - request_start_time
-                    time_dict2 = {'tt3': tt3, 'tt4': tt4, 'register_duration': register_duration}
-                    append_to_json(gid, time_dict2)
+                    time_dict1 = {'tt1': tt1, 'tt2': tt2, 'tt3': tt3, 'register_duration': register_duration}
+                    append_to_json(gid, time_dict1)
 
                 # 如果接收到网关身份认证请求
                 elif request_type == b"GATEWAY AUTHENTICATION":
-
-                    gid, result, tt5, tt6, tt7 = gw_auth(gw_socket, gw_hash_info)
+                    gid, verify_result, tt4, tt5, tt6 = gw_auth(gw_socket, gw_hash_info)
                     auth_end_time = get_timestamp()
                     auth_duration = auth_end_time - request_start_time
-                    time_dict3 = {'tt3': tt3, 'tt5': tt5, 'tt6': tt6, 'tt7': tt7, 'auth_duration': auth_duration}
-                    append_to_json(gid, time_dict3)
-                    # 每次使用aes_key使用sk,pk重新生成
-                    # 上传result
+                    time_dict2 = {'tt4': tt4, 'tt5': tt5, 'tt6': tt6, 'auth_duration': auth_duration}
+                    append_to_json(gid, time_dict2)
 
                 # 如果接收到用户注册请求
                 elif request_type == b"USER REGISTRATION":

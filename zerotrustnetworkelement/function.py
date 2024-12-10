@@ -13,14 +13,7 @@ from noknow.core import ZKSignature, ZKData
 import csv
 
 
-def format_and_print(text, symbol, alignment):
-    """
-    格式化并打印文字和符号的组合，总长度为 100 个字符。
-
-    :param text: str, 输入的文字
-    :param symbol: str, 用于填充的符号，取第一个字符
-    :param alignment: str, 对齐方式 ('left', 'center')
-    """
+def format_and_print(text: str, symbol: str = chr(0x00D7), alignment: str = 'left'):
     # 限制总长度
     total_length = 100
     text_length = len(text)
@@ -41,7 +34,6 @@ def format_and_print(text, symbol, alignment):
         result = symbol[0] * left_fill + text + symbol[0] * right_fill
     else:
         raise ValueError("Invalid alignment. Choose from 'left' or 'center'.")
-
     # 打印结果
     print(result)
 
