@@ -2,6 +2,7 @@ import threading
 import psutil
 from zerotrustnetworkelement.blockchain.gw_register import *
 from zerotrustnetworkelement.blockchain.gw_auth import *
+import socket
 from zerotrustnetworkelement.blockchain.connection import *
 from zerotrustnetworkelement.blockchain.bc_configure import *
 from zerotrustnetworkelement.blockchain.user_register import *
@@ -20,6 +21,8 @@ from zerotrustnetworkelement.function import *
 
 
 def gateway_main():
+    # 建立与智能合约的链接
+    loop, cli, org_admin = sc_connection(net_profile_path, 'org1.example.com')
     # 与网关建立连接
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bc_ip, bc_port))
@@ -41,7 +44,7 @@ def gateway_main():
                 format_and_print(f'Received message type: {request_type}', '-', 'center')
                 # 如果接收到网关身份注册请求
                 if request_type == b"GATEWAY REGISTRATION":
-                    tt1, tt2, tt3, gw_hash_info, gid, verify_result = gw_register(gw_socket)
+                    tt1, tt2, tt3, gw_hash_info, gid, verify_result = gw_register(gw_socket, loop, cli, org_admin,bc_ip)
                     # 上传网关信息
                     register_end_time = get_timestamp()
                     register_duration = register_end_time - request_start_time
@@ -50,7 +53,7 @@ def gateway_main():
 
                 # 如果接收到网关身份认证请求
                 elif request_type == b"GATEWAY AUTHENTICATION":
-                    gid, verify_result, tt4, tt5, tt6 = gw_auth(gw_socket, gw_hash_info)
+                    gid, verify_result, tt4, tt5, tt6 = gw_auth(gw_socket, loop, cli, org_admin, bc_ip)
                     auth_end_time = get_timestamp()
                     auth_duration = auth_end_time - request_start_time
                     time_dict2 = {'tt4': tt4, 'tt5': tt5, 'tt6': tt6, 'auth_duration': auth_duration}
@@ -58,14 +61,14 @@ def gateway_main():
 
                 # 如果接收到用户注册请求
                 elif request_type == b"USER REGISTRATION":
-                    user_hash_info, user_id, tt8 = user_register(gw_socket)
+                    user_hash_info, user_id, tt8 = user_register(gw_socket, loop, cli, org_admin, bc_ip)
                     register_end_time = get_timestamp()
                     user_register_duration = register_end_time - request_start_time
                     time_dict4 = {'tt8': tt8, 'user_register_duration': user_register_duration}
                     append_to_json(user_id, time_dict4)
 
                 elif request_type == b'USER AUTHENTICATION':
-                    user_id, aes_key, tt9, auth_result, tt10, tt11 = user_auth(gw_socket, user_hash_info)
+                    user_id, aes_key, tt9, auth_result, tt10, tt11 = user_auth(gw_socket, loop, cli, org_admin, bc_ip)
                     auth_end_time = get_timestamp()
                     user_auth_duration = auth_end_time - request_start_time
                     time_dict5 = {'tt9': tt9, 'tt10': tt10, 'tt11': tt11, 'user_auth_duration': user_auth_duration}

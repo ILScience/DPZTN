@@ -1,6 +1,8 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from noknow.core import ZK, ZKSignature, ZKData
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, query_bc_pk, query_gw_sig_pk, \
+    query_bc_sig_pk, query_gw_hash_info, update_gid_auth_state
 
 
 # 2.1.接收网关gid
@@ -114,15 +116,22 @@ def verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, 
 
 
 # 2.网关认证
-def gw_auth(client_socket, client_hash_info):
+def gw_auth(client_socket, loop, cli, org_admin, bc_ip):
     format_and_print('2.Starting the authentication process', ':')
     try:
         # 2.1.接收网关gid
         client_id, tt1 = recv_gw_gid(client_socket)
+        response = query_gid_state(loop, cli, org_admin, bc_ip, client_id)
         '''
             查询gid网关注册状态
         '''
         # 2.2.加载密钥
+        server_public_key = query_bc_pk(loop, cli, org_admin, bc_ip, client_id)
+        client_public_key = query_gw_pk(loop, cli, org_admin, bc_ip, client_id)
+        server_verify_key = query_bc_sig_pk(loop, cli, org_admin, bc_ip, client_id)
+        client_verify_key = query_gw_sig_pk(loop, cli, org_admin, bc_ip, client_id)
+        client_hash_info = query_gw_hash_info(loop, cli, org_admin, bc_ip, client_id)
+
         '''
             加载网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
         '''
@@ -141,6 +150,7 @@ def gw_auth(client_socket, client_hash_info):
         result = verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof,
                                  client_sig)
         if result == b"AUTH_SUCCESS":
+            response = update_gid_auth_state(loop, cli, org_admin, bc_ip, client_id)
             '''
                 更改认证状态
             '''

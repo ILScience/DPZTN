@@ -3,110 +3,177 @@ from zerotrustnetworkelement.blockchain.bc_configure import *
 from zerotrustnetworkelement.function import *
 
 
+# 查询gid是否注册
+def query_gid_state(loop, cli, org, ip, gid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[gid],
+        cc_name='ztne',
+        fcn='query_gid_state'
+    ))
+    return response
+
+
 # 上传网关注册信息
-def update_gw_info(loop, cli, org, ip, hash_info, gid, gw_pk, gw_pk_sig, reg_result, bc_pk, bc_pk_sig):
-    print(gw_pk)
+def update_gid_info(loop, cli, org, ip, gid, server_public_key, server_verify_key, client_public_key, client_verify_key,
+                    client_hash_info):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[hash_info, gid, gw_pk, gw_pk_sig, reg_result, bc_pk, bc_pk_sig],
+        args=[gid, server_public_key, server_verify_key, client_public_key, client_verify_key, client_hash_info],
         cc_name='ztne',
-        fcn='update_gw_info'
+        fcn='update_gid_info'
     ))
-    if response is True:
-        format_and_print(f'Gateway information uploaded successfully', '-', 'center')
-    else:
-        format_and_print(f'Gateway information upload failure:{response}', chr(0x00D7), 'left')
     return response
 
 
-def query_register_state(loop, cli, org, ip, gid):
+# 更新注册状态
+def update_gid_reg_state(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='query_register_state'
+        fcn='update_reg_state'
     ))
-    format_and_print('Gateway already register！', '-', 'center')
     return response
 
 
-def query_auth_state(loop, cli, org, ip, gid):
+# 查询区块链公钥
+def query_bc_pk(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='query_auth_state'
+        fcn='query_bc_pk'
     ))
-    format_and_print('Gateway already register！', '-', 'center')
     return response
 
 
-def query_gid_pubkey(loop, cli, org, ip, gid):
+# 查询网关公钥
+def query_gw_pk(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='query_gid_pubkey'
+        fcn='query_gw_pk'
     ))
-    format_and_print('Gateway public key query successful！', '-', 'center')
     return response
 
 
-def query_gid_verkey(loop, cli, org, ip, gid):
+# 查询区块链认证公钥
+def query_bc_sig_pk(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='query_gid_verkey'
+        fcn='query_bc_sig_pk'
     ))
-    format_and_print('Gateway fy key query successful！', '-', 'center')
     return response
 
 
-def query_bc_pubkey(loop, cli, org, ip, gid):
+# 查询网关认证公钥
+def query_gw_sig_pk(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='query_bc_pubkey'
+        fcn='query_gw_sig_pk'
     ))
-    format_and_print('BlockChain public key query successful！', '-', 'center')
     return response
 
 
-def query_bc_verkey(loop, cli, org, ip, gid):
+def query_gw_hash_info(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='query_bc_verkey'
+        fcn='query_gw_hash_info'
     ))
-    format_and_print('BlockChain verify key query successful！', '-', 'center')
     return response
 
 
-def query_gid_hashinfo(loop, cli, org, ip, gid):
+# 更新注册状态
+def update_gid_auth_state(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[gid],
         cc_name='ztne',
-        fcn='gid_hashinfo'
+        fcn='update_auth_state'
     ))
-    format_and_print('Gateway encrypted identity information query successful！', '-', 'center')
+    return response
+
+
+def query_uid_state(loop, cli, org, ip, uid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[uid],
+        cc_name='ztne',
+        fcn='query_uid_state'
+    ))
+    return response
+
+
+def update_uid_info(loop, cli, org, ip, uid, user_hash_info):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[uid, user_hash_info],
+        cc_name='ztne',
+        fcn='update_uid_info'
+    ))
+    return response
+
+
+def update_uid_reg_state(loop, cli, org, ip, uid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[uid],
+        cc_name='ztne',
+        fcn='update_uid_reg_state'
+    ))
+    return response
+
+
+def query_user_hash_info(loop, cli, org, ip, uid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[uid],
+        cc_name='ztne',
+        fcn='query_user_hash_info'
+    ))
+    return response
+
+def update_uid_auth_state(loop, cli, org, ip, uid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[uid],
+        cc_name='ztne',
+        fcn='update_uid_auth_state'
+    ))
     return response

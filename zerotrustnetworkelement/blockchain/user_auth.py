@@ -1,5 +1,7 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_bc_pk, query_gw_pk, query_gw_sig_pk, \
+    query_bc_sig_pk, query_user_hash_info, query_uid_state, update_uid_auth_state
 
 
 # 4.1.接收网关gid
@@ -15,22 +17,23 @@ def recv_gid(gw_socket):
 
 
 # 4.2.加载密钥
-def load_auth_key(gw_folder_path, user_hash_info):
+def load_auth_key(gw_folder_path, loop, cli, org_admin, bc_ip, gw_id):
     format_and_print('4.2.Start searching for keys required for authentication', '.')
     try:
-        # 查询之前的网关公钥，区块链公钥
-        bc_public_key = load_key_from_file('pk_bc', gw_folder_path)
+        '''
+            加载bc_public_key,bc_verify_key, gw_public_key, gw_verify_key，user_hash_info
+        '''
+        bc_public_key = query_bc_pk(loop, cli, org_admin, bc_ip, gw_id)
+        gw_public_key = query_gw_pk(loop, cli, org_admin, bc_ip, gw_id)
+        bc_verify_key = query_bc_sig_pk(loop, cli, org_admin, bc_ip, gw_id)
+        gw_verify_key = query_gw_sig_pk(loop, cli, org_admin, bc_ip, gw_id)
+        # 本地查询区块链私钥
         bc_private_key = load_key_from_file('sk_bc', gw_folder_path)
-        bc_verify_key = load_key_from_file('pk_sig_bc', gw_folder_path)
         bc_sign_key = load_key_from_file('sk_sig_bc', gw_folder_path)
-        gw_public_key = load_key_from_file('pk_gw', gw_folder_path)
-        gw_verify_key = load_key_from_file('pk_sig_gw', gw_folder_path)
-        # 加载用户公钥反馈给网关
-        user_hash_info = convert_message(user_hash_info, 'bytes')
+
         aes_key = generate_aes_key(bc_private_key, gw_public_key)
         format_and_print('4.2.Key required for successful query authentication', "_", "center")
-        return (bc_public_key, bc_private_key, bc_verify_key, bc_sign_key, gw_public_key, gw_verify_key, user_hash_info,
-                aes_key)
+        return bc_public_key, bc_private_key, bc_verify_key, bc_sign_key, gw_public_key, gw_verify_key, aes_key
     except Exception as e:
         format_and_print(f'4.2.Error calling load_auth_key():{e}')
 
@@ -60,7 +63,7 @@ def send_user_info(gw_socket, user_hash_info, aes_key):
 
 
 # 4.5.接收网关传回的注册结果
-def recv_auth_result(gw_socket,aes_key):
+def recv_auth_result(gw_socket, aes_key):
     format_and_print('4.5.Start receiving auth result', '.', 'left')
     try:
         data, transfer_time = recv_with_header(gw_socket)
@@ -72,30 +75,32 @@ def recv_auth_result(gw_socket,aes_key):
 
 
 # 4.网关认证
-def user_auth(gw_socket, user_hash_info):
+def user_auth(gw_socket, loop, cli, org_admin, bc_ip):
     format_and_print('4.Starting the authentication process', ':', 'left')
     try:
         # 4.1.接收网关gid
         gw_id, gw_folder_path, tt1 = recv_gid(gw_socket)
+        response = query_gid_state(loop, cli, org_admin, bc_ip, gw_id)
         '''
             查询gid状态
         '''
         # 4.2.加载密钥
-        '''
-            加载bc_public_key,bc_verify_key, gw_public_key, gw_verify_key，user_hash_info
-        '''
-        (bc_public_key, bc_private_key, bc_verify_key, bc_sign_key, gw_public_key, gw_verify_key, user_hash_info,
-         aes_key) = load_auth_key(gw_folder_path, user_hash_info)
+        (bc_public_key, bc_private_key, bc_verify_key, bc_sign_key, gw_public_key, gw_verify_key,
+         aes_key) = load_auth_key(gw_folder_path, loop, cli, org_admin, bc_ip, gw_id)
         # 4.3.接收用户uid
         user_id, tt2 = recv_uid(gw_socket, aes_key)
+        user_hash_info = query_user_hash_info(loop, cli, org_admin, bc_ip, user_id)
+        response = query_uid_state(loop, cli, org_admin, bc_ip, user_id)
         '''
             查询uid注册状态
         '''
         # 4.4.将用户信息返回给网关
         send_user_info(gw_socket, user_hash_info, aes_key)
         # 4.5.接收网关传回的认证结果
-        auth_result, tt3 = recv_auth_result(gw_socket,aes_key)
+        auth_result, tt3 = recv_auth_result(gw_socket, aes_key)
         if auth_result == b"AUTH_SUCCESS":
+
+            response = update_uid_auth_state(loop, cli, org_admin, bc_ip, user_id)
             '''
                 更改用户认证状态
             '''

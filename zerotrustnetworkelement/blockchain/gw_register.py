@@ -2,6 +2,7 @@ from zerotrustnetworkelement.blockchain.bc_function import *
 import cryptography.exceptions
 from zerotrustnetworkelement.encryption.ecc import *
 from zerotrustnetworkelement.function import *
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, update_gid_info, update_gid_reg_state
 
 '''可以放入function'''
 
@@ -27,7 +28,7 @@ def generate_ecc_key():
 
 # 1.2.公钥交换
 def exchange_pk_with_gw(client_socket, server_public_key, server_verify_key):
-    format_and_print('1.2.Exchanging Key', ':', 'left')
+    format_and_print('1.2.Exchanging Key', ':')
     try:
         send_with_header(client_socket, convert_message(server_public_key, 'bytes'))  # 发送区块链公钥
         send_with_header(client_socket, convert_message(server_verify_key, 'bytes'))  # 发送区块链认证密钥
@@ -48,7 +49,7 @@ def exchange_pk_with_gw(client_socket, server_public_key, server_verify_key):
 
 # 1.3.接收网关加密身份信息和网关签名
 def recv_gw_identity_info(client_socket, ecc, server_private_key, client_public_key):
-    format_and_print('1.3.Start receiving gateway encrypted identities and gateway signatures', '.', 'left')
+    format_and_print('1.3.Start receiving gateway encrypted identities and gateway signatures', '.')
     try:
         data, transfer_time = recv_with_header(client_socket)
         message1 = convert_message(data, 'str')
@@ -114,7 +115,7 @@ def verify_client_sig(ecc, client_verify_key, client_sig):
 
 # 1.7.给网关返回gid和区块链签名
 def return_gid_and_signature(client_socket, client_id, ecc, server_sign_key, server_private_key, client_public_key):
-    format_and_print('1.7. Start sending gid and blockchain signature to gateway', '.', 'left')
+    format_and_print('1.7. Start sending gid and blockchain signature to gateway', '.')
     try:
         server_signature = ecc.ecc_sign(server_sign_key, client_id.bytes)  # 生成区块链签名
         # 发送gid，区块链签名
@@ -128,7 +129,7 @@ def return_gid_and_signature(client_socket, client_id, ecc, server_sign_key, ser
 
 
 # 网关身份注册
-def gw_register(client_socket):
+def gw_register(client_socket, loop, cli, org_admin, bc_ip):
     format_and_print('1.Initiate the gateway registration process', ':')
     try:
         # 1.1.生成区块链ecc密钥对
@@ -141,6 +142,10 @@ def gw_register(client_socket):
             recv_gw_identity_info(client_socket, bc_ecc, server_private_key, client_public_key))
         # 1.4.生成gid，并返回gid注册状态查询结果
         client_id = generate_gw_id(client_hash_info)
+        response = query_gid_state(loop, cli, org_admin, bc_ip, client_id)
+        '''
+            查询gid是否注册
+        '''
         # 1.5.创建以gid命名的文件夹存储公私钥
         save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
                         client_public_key, client_verify_key)
@@ -151,14 +156,18 @@ def gw_register(client_socket):
             # 1.7.返回区块链签名和gid
             return_gid_and_signature(client_socket, client_id, bc_ecc, server_sign_key, server_private_key,
                                      client_public_key)
+            response = update_gid_info(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
+                                       client_public_key, client_verify_key, client_hash_info)
             '''
                 上传gid，网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info；
                 更改注册状态
             '''
+            response = update_gid_reg_state(loop, cli, org_admin, bc_ip, client_id)
+            format_and_print('1.Gateway Registration Successful', "=", "center")
+            return tt1, tt2, tt3, client_hash_info, client_id, client_sig_verify_result
         else:
-            format_and_print(f'1.7 Gateway signature verification failed', chr(0x00D7), 'left')
-        format_and_print('1.Gateway Registration Successful', "=", "center")
-        return tt1, tt2, tt3, client_hash_info, client_id, client_sig_verify_result
+            format_and_print(f'1.7 Gateway signature verification failed')
+            return None, None, None, None, None, None
 
     except Exception as e:
         format_and_print(f'1.Unexpected error in gw_register():{str(e)}')

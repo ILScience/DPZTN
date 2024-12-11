@@ -162,6 +162,8 @@ def user_register(gw_socket, user_socket, gw_id):
                                  user_pk, user_sig_pk)
             # 3.9.生成网关签名,发送给用户
             generate_gateway_sign(ecc, user_id, user_socket, gateway_sign_key, gateway_private_key, user_pk)
+
+            send_with_header(gw_socket,verify_result)
             '''
                 请求修改用户注册状态
             '''

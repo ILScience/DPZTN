@@ -166,6 +166,7 @@ def user_auth(user_socket, gw_socket, gw_id):
     try:
         # 4.1.接收用户uid
         user_id, tt_u1 = recv_uid(user_socket)
+
         '''
             请求uid的注册状态和认证状态
         '''

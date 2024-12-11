@@ -1,6 +1,8 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from zerotrustnetworkelement.blockchain.bc_function import *
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, update_uid_info, \
+    update_uid_reg_state, query_uid_state
 
 
 # 3.1.接收gid
@@ -61,26 +63,36 @@ def return_uid_to_gateway(bc_private_key, gw_public_key, user_id, gw_socket):
 
 
 # 3.用户注册
-def user_register(gw_socket):
+def user_register(gw_socket, loop, cli, org_admin, bc_ip):
     try:
         # 3.1.接收gid
         gw_id = recv_gw_id(gw_socket)
+        response = query_gid_state(loop, cli, org_admin, bc_ip, gw_id)
         '''
             查询gw_id是否认证成功
         '''
         # 3.2.加载密钥
+        gw_public_key = query_gw_pk(loop, cli, org_admin, bc_ip, gw_id)
         '''
             加载gid的gw_public_key
         '''
         bc_private_key, gw_public_key = load_key(gw_socket, gw_id)
         # 3.3.接收用户加密消息，生成uid
-        user_hash_info, uid, tt1 = receive_user_identity(gw_socket, bc_private_key, gw_public_key)
-        # 3.4.发送uid给网关
-        return_uid_to_gateway(bc_private_key, gw_public_key, uid, gw_socket)
+        user_hash_info, user_id, tt1 = receive_user_identity(gw_socket, bc_private_key, gw_public_key)
+        response = query_uid_state(loop, cli, org_admin, bc_ip, user_id)
         '''
-            上传user_hash_info，
+            查询uid状态
+        '''
+        # 3.4.发送uid给网关
+        return_uid_to_gateway(bc_private_key, gw_public_key, user_id, gw_socket)
+
+        response = update_uid_info(loop, cli, org_admin, bc_ip, user_id, user_hash_info)
+        user_reg_result = recv_gw_id(gw_socket)
+        response = update_uid_reg_state(loop, cli, org_admin, bc_ip, user_id)
+        '''
+            上传uid,user_hash_info，
             接收用户注册状态，更改用户的注册状态
         '''
-        return user_hash_info, uid, tt1
+        return user_hash_info, user_id, tt1
     except Exception as e:
         format_and_print(f'3.Error calling user_register():{e}')
