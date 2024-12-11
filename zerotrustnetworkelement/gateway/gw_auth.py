@@ -9,7 +9,7 @@ from zerotrustnetworkelement.encryption.myhash import *
 def load_auth_key(client_id):
     format_and_print('2.1.Loading the required key for auth', '.')
     try:
-        folder_path = get_folder_path(str(client_id))
+        folder_path = get_folder_path('gateway'+str(client_id))
         client_private_key = load_key_from_file("sk_gw", folder_path)  # 加载网关私钥
         server_public_key = load_key_from_file("pk_bc", folder_path)  # 加载区块链公钥
         aes_key = generate_aes_key(client_private_key, server_public_key)  # 生成会话密钥

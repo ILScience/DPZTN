@@ -9,7 +9,7 @@ def load_key(gw_socket):
     try:
         data, transfer_time = recv_with_header(gw_socket)
         gw_id = convert_message(convert_message(data, 'str'), 'UUID')
-        gw_folder_path = get_folder_path(str(gw_id))
+        gw_folder_path = get_folder_path('gateway'+str(gw_id))
 
         bc_private_key = load_key_from_file('sk_bc', gw_folder_path)  # 加载区块链私钥
         gw_public_key = load_key_from_file('pk_gw', gw_folder_path)  # 加载网关公钥

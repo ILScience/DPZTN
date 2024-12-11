@@ -42,7 +42,7 @@ def user_pk_exchange(user_socket, gateway_public_key, gateway_verify_key):
 def load_session_key(gw_id):
     format_and_print("3.3.Loading the gateway's communication key with the blockchain", '.')
     try:
-        gw_folder_path = get_folder_path(str(gw_id))
+        gw_folder_path = get_folder_path('gateway'+str(gw_id))
         sk_gw = load_key_from_file('sk_gw', gw_folder_path)
         pk_bc = load_key_from_file('pk_bc', gw_folder_path)
         aes_key = generate_aes_key(sk_gw, pk_bc)
@@ -108,7 +108,7 @@ def save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gatew
                          user_pk, user_sig_pk):
     format_and_print('3.8.Start storing keys', '.')
     try:
-        user_folder_path = get_folder_path(str(user_id))
+        user_folder_path = get_folder_path('user'+str(user_id))
         if os.path.exists(user_folder_path):
             format_and_print(f'3.8.Gateway is registered')
         else:

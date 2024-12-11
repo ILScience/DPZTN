@@ -8,7 +8,7 @@ def recv_gid(gw_socket):
     try:
         data, transfer_time = recv_with_header(gw_socket)
         gid = convert_message(convert_message(data, 'str'), 'UUID')
-        gw_folder_path = get_folder_path(str(gid))
+        gw_folder_path = get_folder_path('gateway' + str(gid))
         return gid, gw_folder_path, transfer_time
     except Exception as e:
         format_and_print(f'4.1.Error calling recv_gid():{e}')

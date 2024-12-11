@@ -103,7 +103,7 @@ def save_gw_ecc_key(client_id, client_public_key, client_private_key, client_ver
                     server_public_key, server_verify_key):
     format_and_print('1.7.Start saving ecc keys', '.')
     try:
-        folder_path = get_folder_path(str(client_id))
+        folder_path = get_folder_path('gateway'+str(client_id))
         # 判断文件夹是否存在
         if os.path.exists(folder_path):
             format_and_print(f'1.7.Gateway is registered')

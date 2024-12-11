@@ -7,11 +7,11 @@ from noknow.core import ZK, ZKSignature, ZKData
 def recv_uid(user_socket):
     format_and_print('4.1.Start receiving uid', '.')
     try:
-        data, transfer_time = recv_with_header(user_socket)
+        data, tt_u = recv_with_header(user_socket)
         message = convert_message(data, 'str')
         user_id = convert_message(message, 'UUID')
         format_and_print('4.1.Received uid successfully', "_", "center")
-        return user_id, transfer_time
+        return user_id, tt_u
 
     except Exception as e:
         format_and_print(f'4.1.Error calling recv_uid():{e}')
@@ -22,7 +22,7 @@ def load_auth_key(user_id, gw_id):
     format_and_print('4.2.Start searching for keys required for authentication', '.')
     try:
         # 查询之前的网关公钥，区块链公钥
-        gw_folder_path = get_folder_path(str(gw_id))
+        gw_folder_path = get_folder_path('gateway' + str(gw_id))
         blockchain_public_key = load_key_from_file('pk_bc', gw_folder_path)
         blockchain_verify_key = load_key_from_file('pk_sig_bc', gw_folder_path)
         gw_public_key = load_key_from_file('pk_gw', gw_folder_path)
@@ -31,7 +31,7 @@ def load_auth_key(user_id, gw_id):
         gw_sign_key = load_key_from_file('sk_sig_gw', gw_folder_path)
         aes_key_to_bc = generate_aes_key(gw_private_key, blockchain_public_key)
 
-        user_folder_path = get_folder_path(str(user_id))
+        user_folder_path = get_folder_path('user' + str(user_id))
         gateway_public_key = load_key_from_file('pk_gateway', user_folder_path)
         gateway_private_key = load_key_from_file('sk_gateway', user_folder_path)
         gateway_verify_key = load_key_from_file('pk_sig_gateway', user_folder_path)
@@ -95,12 +95,12 @@ def generate_bc_sign(gateway_private_key, user_public_key, user_hash_info):
 def recv_gateway_sign(user_socket, aes_key_to_user):
     format_and_print('4.6.Receiving gateway signature message', '.')
     try:
-        data, transfer_time = recv_with_header(user_socket)
+        data, tt_u = recv_with_header(user_socket)
         message1 = aes_decrypt(aes_key_to_user, data)
         user_sig = convert_message(message1, 'ZKSignature')
         user_zk = ZK(user_sig.params)
         format_and_print('4.6.Successfully received gateway signature message', "_", "center")
-        return user_sig, user_zk, transfer_time
+        return user_sig, user_zk, tt_u
 
     except Exception as e:
         format_and_print(f'4.6.Error calling recv_gateway_sign():{e}')
@@ -176,16 +176,16 @@ def user_auth(user_socket, gw_socket, gw_id):
         # 4.4.从区块链接收用户信息
         user_hash_info, tt_b1 = recv_user_info(gw_socket, aes_key_to_bc)
         # 4.5.利用接收到的的网关信息生成网关签名
-        aes_key_to_user, server_zk, server_signature = generate_bc_sign(gateway_private_key, user_public_key,
-                                                                        user_hash_info)
+        aes_key_to_user, gateway_zk, gateway_signature = generate_bc_sign(gateway_private_key, user_public_key,
+                                                                          user_hash_info)
         # 4.6.接收用户签名信息
-        client_sig, client_zk, tt_u2 = recv_gateway_sign(user_socket, aes_key_to_user)
+        user_sig, user_zk, tt_u2 = recv_gateway_sign(user_socket, aes_key_to_user)
         # 4.7.生成签名令牌并发送给网关
-        generate_token_and_send(server_zk, user_hash_info, client_zk, aes_key_to_user, user_socket)
+        generate_token_and_send(gateway_zk, user_hash_info, user_zk, aes_key_to_user, user_socket)
         # 4.8.接收网关发送的proof
         proof, token, tt_u3 = recv_gw_proof(user_socket, aes_key_to_user)
-        verify_result = verify_gw_token(server_zk, token, server_signature, user_socket, gw_socket, aes_key_to_user,
-                                        aes_key_to_bc, client_zk, proof, client_sig)
+        verify_result = verify_gw_token(gateway_zk, token, gateway_signature, user_socket, gw_socket, aes_key_to_user,
+                                        aes_key_to_bc, user_zk, proof, user_sig)
         if verify_result is b"AUTH_SUCCESS":
             format_and_print('4.Successful authentication', '=', 'center')
             return user_id, aes_key_to_user, verify_result, tt_u1, tt_b1, tt_u2, tt_u3

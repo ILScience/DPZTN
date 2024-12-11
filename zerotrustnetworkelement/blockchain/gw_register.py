@@ -83,10 +83,10 @@ def generate_gid(client_hash_info):
 
 # 1.5.创建以gid命名的文件夹存储公私钥
 def save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
-                 client_public_key, client_verify_key):
+                    client_public_key, client_verify_key):
     try:
         format_and_print('1.5.Start storing keys', '.')
-        folder_path = get_folder_path(str(client_id))
+        folder_path = get_folder_path('gateway' + str(client_id))
         if os.path.exists(folder_path):
             format_and_print(f'1.5.Gateway is registered')
         else:
@@ -145,7 +145,7 @@ def gw_register(client_socket):
         client_id = generate_gid(client_hash_info)
         # 1.5.创建以gid命名的文件夹存储公私钥
         save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
-                     client_public_key, client_verify_key)
+                        client_public_key, client_verify_key)
         # 1.6.验证网关签名
         client_sig_verify_result = verify_client_sig(bc_ecc, client_verify_key, client_sig)
 

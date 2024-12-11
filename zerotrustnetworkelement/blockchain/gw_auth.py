@@ -17,9 +17,10 @@ def recv_gw_gid(client_socket):
 
 
 # 2.2.加载密钥
-def load_auth_key(client_hash_info, folder_path):
+def load_auth_key(client_hash_info, client_id):
     format_and_print('2.2.Start searching for keys required for authentication', '.')
     try:
+        folder_path = get_folder_path('gateway' + str(client_id))
         # 查询之前的网关公钥，区块链公钥
         server_public_key = load_key_from_file('pk_bc', folder_path)
         server_private_key = load_key_from_file('sk_bc', folder_path)
@@ -118,11 +119,10 @@ def gw_auth(client_socket, client_hash_info):
     try:
         # 2.1.接收网关gid
         client_id, tt1 = recv_gw_gid(client_socket)
-        folder_path = get_folder_path(str(client_id))
         # 2.2.加载密钥
-        (server_public_key, server_private_key, server_verify_key, server_sign_key,
-         client_public_key, client_verify_key, client_hash_info) = load_auth_key(
-            client_hash_info, folder_path)
+        (
+        server_public_key, server_private_key, server_verify_key, server_sign_key, client_public_key, client_verify_key,
+        client_hash_info) = load_auth_key(client_hash_info, client_id)
         # 2.3.利用存储在区块链的网关信息生成签名
         aes_key, server_zk, server_signature = generate_bc_sign(server_private_key, client_public_key,
                                                                 client_hash_info)
