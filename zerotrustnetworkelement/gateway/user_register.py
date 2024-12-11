@@ -42,7 +42,7 @@ def user_pk_exchange(user_socket, gateway_public_key, gateway_verify_key):
 def load_session_key(gw_id):
     format_and_print("3.3.Loading the gateway's communication key with the blockchain", '.')
     try:
-        gw_folder_path = get_folder_path('gateway'+str(gw_id))
+        gw_folder_path = get_folder_path('gateway' + str(gw_id))
         sk_gw = load_key_from_file('sk_gw', gw_folder_path)
         pk_bc = load_key_from_file('pk_bc', gw_folder_path)
         aes_key = generate_aes_key(sk_gw, pk_bc)
@@ -72,7 +72,7 @@ def receive_user_info(user_socket, ecc, gateway_private_key, user_public_key):
 def verify_user_signature(ecc, user_verify_key, user_sig):
     format_and_print('3.5.Start verifying user signatures', '.')
     try:
-        verify_result = ecc.ecc_verify(ecc, user_verify_key, user_sig)
+        verify_result = ecc.ecc_verify(user_verify_key, user_sig)
         return verify_result
     except Exception as e:
         format_and_print(f"3.5.Unexpected error occurred in verify_user_signature(): {str(e)}")
@@ -108,7 +108,7 @@ def save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gatew
                          user_pk, user_sig_pk):
     format_and_print('3.8.Start storing keys', '.')
     try:
-        user_folder_path = get_folder_path('user'+str(user_id))
+        user_folder_path = get_folder_path('user' + str(user_id))
         if os.path.exists(user_folder_path):
             format_and_print(f'3.8.Gateway is registered')
         else:
@@ -161,7 +161,7 @@ def user_register(gw_socket, user_socket, gw_id):
             save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gateway_verify_key, gateway_sign_key,
                                  user_pk, user_sig_pk)
             # 3.9.生成网关签名,发送给用户
-            generate_gateway_sign(ecc, gateway_sign_key, user_id, gateway_private_key, user_pk, user_socket)
+            generate_gateway_sign(ecc, user_id, user_socket, gateway_sign_key, gateway_private_key, user_pk)
             format_and_print('3.Identity Registration Successful', "=", "center")
             return user_id, tt_u1, tt_u2, tt_u3, tt_b1
         else:

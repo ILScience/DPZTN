@@ -1,3 +1,5 @@
+import nacl.public
+
 from zerotrustnetworkelement.encryption.myhash import *
 from zerotrustnetworkelement.encryption.ecc import *
 from zerotrustnetworkelement.function import *
@@ -70,6 +72,7 @@ def decrypt_and_verify_data(user_socket, ecc, user_private_key, gateway_public_k
     try:
         data, transfer_time = recv_with_header(user_socket)
         message2 = convert_message(data, 'str')  # 接收加密消息
+        print(data)
         decrypted_message = ecc.ecc_decrypt(user_private_key, gateway_public_key, message2)  # 解密消息
         user_id_str, gateway_sig_str = decrypted_message.split("||")  # 解析消息
 
@@ -79,6 +82,8 @@ def decrypt_and_verify_data(user_socket, ecc, user_private_key, gateway_public_k
 
         format_and_print('1.5.Receive blockchain signature and verify success', "-", "center")
         return user_id, gateway_sig, transfer_time
+    except nacl.public.EncryptedMessage as n:
+        format_and_print(f'{n}')
     except Exception as e:
         format_and_print(f'1.5.Error calling decrypt_and_verify_data():{e}')
 
@@ -98,7 +103,7 @@ def save_user_keys(user_id, user_public_key, user_private_key, user_verify_key, 
                    gateway_public_key, gateway_verify_key):
     format_and_print('1.7.Saving user ecc keys', '.')
     try:
-        user_folder_path = get_folder_path('user' +str(user_id))
+        user_folder_path = get_folder_path('user' + str(user_id))
         # 判断文件夹是否存在
         if os.path.exists(user_folder_path):
             format_and_print(f'Gateway is registered', chr(0x00D7), 'left')
@@ -146,4 +151,3 @@ def user_reg(user_socket):
             return None, None, None, None, None
     except Exception as e:
         format_and_print(f'1.Error calling user_reg():{e}')
-

@@ -52,10 +52,10 @@ def gateway_main():
         authentication_result = gateway_auth(gw_socket, gw_id)
 
         if authentication_result:
-            format_and_print('3.Successful authentication', "=", "center")
+            format_and_print('2.Successful authentication', "=", "center")
             return authentication_result, gw_id, gw_socket
         else:
-            format_and_print('3.Authentication failure')
+            format_and_print('2.Authentication failure')
     except Exception as e:
         format_and_print(f'Error calling gateway_main():{e}')
 

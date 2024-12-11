@@ -58,18 +58,18 @@ def gateway_main():
 
                 # 如果接收到用户注册请求
                 elif request_type == b"USER REGISTRATION":
-                    user_hash_info, uid, tt8 = user_register(gw_socket)
+                    user_hash_info, user_id, tt8 = user_register(gw_socket)
                     register_end_time = get_timestamp()
                     user_register_duration = register_end_time - request_start_time
                     time_dict4 = {'tt8': tt8, 'user_register_duration': user_register_duration}
-                    append_to_json(uid, time_dict4)
+                    append_to_json(user_id, time_dict4)
 
                 elif request_type == b'USER AUTHENTICATION':
-                    uid, aes_key, tt9, auth_result, tt10 = user_auth(gw_socket, user_hash_info)
+                    user_id, aes_key, tt9, auth_result, tt10, tt11 = user_auth(gw_socket, user_hash_info)
                     auth_end_time = get_timestamp()
                     user_auth_duration = auth_end_time - request_start_time
-                    time_dict5 = {'tt9': tt9, 'tt10': tt10, 'user_auth_duration': user_auth_duration}
-                    append_to_json(uid, time_dict5)
+                    time_dict5 = {'tt9': tt9, 'tt10': tt10, 'tt11': tt11, 'user_auth_duration': user_auth_duration}
+                    append_to_json(user_id, time_dict5)
 
             except KeyboardInterrupt as k:
                 gw_socket.close()

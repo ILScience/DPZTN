@@ -186,7 +186,7 @@ def user_auth(user_socket, gw_socket, gw_id):
         proof, token, tt_u3 = recv_gw_proof(user_socket, aes_key_to_user)
         verify_result = verify_gw_token(gateway_zk, token, gateway_signature, user_socket, gw_socket, aes_key_to_user,
                                         aes_key_to_bc, user_zk, proof, user_sig)
-        if verify_result is b"AUTH_SUCCESS":
+        if verify_result == b"AUTH_SUCCESS":
             format_and_print('4.Successful authentication', '=', 'center')
             return user_id, aes_key_to_user, verify_result, tt_u1, tt_b1, tt_u2, tt_u3
         else:

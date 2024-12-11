@@ -7,9 +7,9 @@ def recv_gid(gw_socket):
     format_and_print('4.1.Start searching for keys required for authentication', '.')
     try:
         data, transfer_time = recv_with_header(gw_socket)
-        gid = convert_message(convert_message(data, 'str'), 'UUID')
-        gw_folder_path = get_folder_path('gateway' + str(gid))
-        return gid, gw_folder_path, transfer_time
+        gw_id = convert_message(convert_message(data, 'str'), 'UUID')
+        gw_folder_path = get_folder_path('gateway' + str(gw_id))
+        return gw_id, gw_folder_path, transfer_time
     except Exception as e:
         format_and_print(f'4.1.Error calling recv_gid():{e}')
 
@@ -52,10 +52,7 @@ def recv_uid(gw_socket, aes_key):
 def send_user_info(gw_socket, user_hash_info, aes_key):
     format_and_print('4.4.Start returning user information', '.', 'left')
     try:
-        print(user_hash_info)
-        print(type(user_hash_info))
         message = aes_encrypt(aes_key, user_hash_info)
-        print(message)
         send_with_header(gw_socket, message)
         format_and_print('4.4.User information returned', "_", "center")
     except Exception as e:
@@ -63,11 +60,11 @@ def send_user_info(gw_socket, user_hash_info, aes_key):
 
 
 # 4.5.接收网关传回的注册结果
-def recv_auth_result(gw_socket):
+def recv_auth_result(gw_socket,aes_key):
     format_and_print('4.5.Start receiving auth result', '.', 'left')
     try:
         data, transfer_time = recv_with_header(gw_socket)
-        auth_result = convert_message(data, 'str')
+        auth_result = aes_decrypt(aes_key, data)
         format_and_print('4.5.Received auth result', "_", "center")
         return auth_result, transfer_time
     except Exception as e:
@@ -82,14 +79,14 @@ def user_auth(gw_socket, user_hash_info):
         gw_id, gw_folder_path, tt1 = recv_gid(gw_socket)
         # 4.2.加载密钥
         (bc_public_key, bc_private_key, bc_verify_key, bc_sign_key, gw_public_key, gw_verify_key, user_hash_info,
-         aes_key) = load_auth_key(gw_socket, user_hash_info)
+         aes_key) = load_auth_key(gw_folder_path, user_hash_info)
         # 4.3.接收用户uid
         user_id, tt2 = recv_uid(gw_socket, aes_key)
         # 4.4.将用户信息返回给网关
         send_user_info(gw_socket, user_hash_info, aes_key)
-        # 4.5.接收网关传回的注册结果
-        auth_result, tt3 = recv_auth_result(gw_socket)
-        if auth_result is "AUTH_SUCCESS":
+        # 4.5.接收网关传回的认证结果
+        auth_result, tt3 = recv_auth_result(gw_socket,aes_key)
+        if auth_result == b"AUTH_SUCCESS":
             format_and_print('4.Auth success', "=", "center")
             return user_id, aes_key, tt1, auth_result, tt2, tt3
         else:

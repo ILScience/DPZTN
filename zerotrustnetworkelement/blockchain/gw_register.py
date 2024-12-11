@@ -68,15 +68,13 @@ def recv_gw_identity_info(client_socket, ecc, server_private_key, client_public_
 
 
 # 1.4.生成gid
-def generate_gid(client_hash_info):
+def generate_gw_id(client_hash_info):
     format_and_print('1.4.Start generating gid', '.')
     try:
         gateway_id = generate_gid(convert_message(client_hash_info, 'str'))  # 生成gid
         format_and_print('1.4.Complete gid generation', "-", "center")
         return gateway_id
 
-    except KeyboardInterrupt as k:
-        format_and_print(f'1.4.KeyboardInterrupt in generate_gid():{str(k)}')
     except Exception as e:
         format_and_print(f'1.4.Unexpected error in generate_gid():{str(e)}')
 
@@ -142,7 +140,7 @@ def gw_register(client_socket):
         client_hash_info, client_sig, tt3 = (
             recv_gw_identity_info(client_socket, bc_ecc, server_private_key, client_public_key))
         # 1.4.生成gid，并返回gid注册状态查询结果
-        client_id = generate_gid(client_hash_info)
+        client_id = generate_gw_id(client_hash_info)
         # 1.5.创建以gid命名的文件夹存储公私钥
         save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
                         client_public_key, client_verify_key)
