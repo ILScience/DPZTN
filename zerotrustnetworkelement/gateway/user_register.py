@@ -1,148 +1,171 @@
 from zerotrustnetworkelement.encryption.ecdh import *
-from zerotrustnetworkelement.gateway.exchange_key_with_user import *
+from zerotrustnetworkelement.encryption.ecc import *
+from zerotrustnetworkelement.function import *
 
 
-# 2.2 接收用户加密身份信息和用户签名
-def receive_user_info(client_socket, ecc, server_private_key, client_public_key):
-    format_and_print('2.2 Start receiving user encrypted identities and user signatures', '.', 'left')
+# 3.1.生成网关密钥对，用于与用户进行加密通信
+def generate_gateway_ecc_key():
+    format_and_print('3.1.The ecc key pair being generated', ':')
     try:
-        data, transfer_time = recv_with_header(client_socket)
-        message1 = convert_message(data, 'str')
-        client_hash_info, client_sig_str = ecc.ecc_decrypt(server_private_key, client_public_key,
-                                                           message1).split("||")  # 消息解密
-        client_hash_info = convert_message(client_hash_info, 'bytes')  # 将用户身份加密消息，由str转换成bytes
-        client_sig = convert_message(client_sig_str, 'SignedMessage')  # 将用户签名由str转换成SignedMessage
-        format_and_print('2.2 Successful receipt of user information and user signature', '-', 'center')
-        return client_hash_info, client_sig, transfer_time
-    except KeyboardInterrupt as k:
-        print('KeyboardInterrupt:', k)
+        ecc = ECC()
+        gateway_private_key, gateway_public_key = ecc.ecc_genkey()
+        gateway_signing_key, gateway_verify_key = ecc.ecc_genkey_sign()
+        format_and_print('3.1.The ecc key pair was successfully generated', '-', 'center')
+        return gateway_private_key, gateway_public_key, gateway_signing_key, gateway_verify_key, ecc
     except ValueError as v:
-        print('ValueError:', v)
+        format_and_print(f"3.1.ValueError in generate_ecc_key(): {str(v)}")
     except TypeError as t:
-        print('TypeError:', t)
-    except IndexError as i:
-        print('IndexError:', i)
-    except AttributeError as a:
-        print('AttributeError:', a)
+        format_and_print(f"3.1.TypeError in generate_ecc_key(): {str(t)}")
+    except Exception as e:
+        format_and_print(f"3.1.Unexpected error occurred in generate_ecc_key(): {str(e)}")
 
 
-# 2.3 验证用户签名
-def verify_user_sign(ecc, client_verify_key, client_sig):
-    format_and_print('2.3 Verify User Signature', '.', 'left')
+# 3.2.公钥交换
+def user_pk_exchange(user_socket, gateway_public_key, gateway_verify_key):
+    format_and_print('3.2.Exchanging Key', ':')
     try:
-        verify_result = ecc.ecc_verify(client_verify_key, client_sig)
-        format_and_print('2.3 Complete user signature verification', '-', 'center')
+        send_with_header(user_socket, convert_message(gateway_public_key, 'bytes'))  # 发送区块链公钥
+        send_with_header(user_socket, convert_message(gateway_verify_key, 'bytes'))  # 发送区块链认证密钥
+
+        data, tt_u1 = recv_with_header(user_socket)
+        user_public_key = convert_message(data, 'PublicKey')  # 接收用户公钥
+        data, tt_u2 = recv_with_header(user_socket)
+        user_verify_key = convert_message(data, 'VerifyKey')  # 接收用户认证密钥
+
+        format_and_print('3.2.Key exchange successful', '=', 'center')
+        return user_public_key, user_verify_key, tt_u1, tt_u2
+    except Exception as e:
+        format_and_print(f"3.2.Unexpected error occurred in user_pk_exchange(): {str(e)}")
+
+
+# 3.3.加载网关与区块链通信密钥
+def load_session_key(gw_id):
+    format_and_print("3.3.Loading the gateway's communication key with the blockchain", '.')
+    try:
+        gw_folder_path = get_folder_path(str(gw_id))
+        sk_gw = load_key_from_file('sk_gw', gw_folder_path)
+        pk_bc = load_key_from_file('pk_bc', gw_folder_path)
+        aes_key = generate_aes_key(sk_gw, pk_bc)
+        format_and_print('3.3.Communication key successfully loaded', '-', 'center')
+        return aes_key
+    except Exception as e:
+        format_and_print(f"3.3.Unexpected error occurred in load_gw_key(): {str(e)}")
+
+
+# 3.4.接收用户加密身份信息和用户签名
+def receive_user_info(user_socket, ecc, gateway_private_key, user_public_key):
+    format_and_print('3.4.Start receiving user encrypted identities and user signatures', '.')
+    try:
+        data, transfer_time = recv_with_header(user_socket)
+        message1 = convert_message(data, 'str')
+        user_hash_info, user_sig_str = ecc.ecc_decrypt(gateway_private_key, user_public_key,
+                                                       message1).split("||")  # 消息解密
+        user_hash_info = convert_message(user_hash_info, 'bytes')  # 将用户身份加密消息，由str转换成bytes
+        user_sig = convert_message(user_sig_str, 'SignedMessage')  # 将用户签名由str转换成SignedMessage
+        format_and_print('3.4.Successful receipt of user information and user signature', '-', 'center')
+        return user_hash_info, user_sig, transfer_time
+    except Exception as e:
+        format_and_print(f"3.4.Unexpected error occurred in receive_user_info(): {str(e)}")
+
+
+# 3.5.验证用户签名
+def verify_user_signature(ecc, user_verify_key, user_sig):
+    format_and_print('3.5.Start verifying user signatures', '.')
+    try:
+        verify_result = ecc.ecc_verify(ecc, user_verify_key, user_sig)
         return verify_result
     except Exception as e:
-        format_and_print(f'2.3 Error calling verify_user_sign():{e}', chr(0x00D7), 'left')
+        format_and_print(f"3.5.Unexpected error occurred in verify_user_signature(): {str(e)}")
 
 
-# 2.4 将gid和用户加密信息发送给区块链
-def send_gid_and_uinfo(gateway_socket, client_hash_info, aes_key_to_bc, gid):
-    format_and_print(f'Send gid and user identity information to the blockchain', '.', 'left')
+# 3.6.将gid和用户加密信息发送给区块链
+def send_gid_and_user_info(gw_socket, user_hash_info, aes_key_to_bc, gw_id):
+    format_and_print(f'3.6.Send gid and user identity information to the blockchain', '.')
     try:
-        send_with_header(gateway_socket, b"USER REGISTRATION")  # 发送消息类型
-        send_with_header(gateway_socket, convert_message(f'{gid}', 'bytes'))
-        message2 = aes_encrypt(aes_key_to_bc, convert_message(f'{client_hash_info}', 'bytes'))
-        send_with_header(gateway_socket, message2)
-        format_and_print('2.4 Gid and user encrypted message sent.', '-', 'center')
-
-    except KeyboardInterrupt as k:
-        print('KeyboardInterrupt:', k)
-    except ValueError as v:
-        print('ValueError:', v)
-    except TypeError as t:
-        print('TypeError:', t)
-    except IndexError as i:
-        print('IndexError:', i)
-    except AttributeError as a:
-        print('AttributeError:', a)
+        send_with_header(gw_socket, b"USER REGISTRATION")  # 发送消息类型
+        send_with_header(gw_socket, convert_message(f'{gw_id}', 'bytes'))
+        message2 = aes_encrypt(aes_key_to_bc, convert_message(f'{user_hash_info}', 'bytes'))
+        send_with_header(gw_socket, message2)
+        format_and_print('3.6.Gid and user encrypted message sent.', '-', 'center')
+    except Exception as e:
+        format_and_print(f"3.6.Unexpected error occurred in send_gid_and_user_info(): {str(e)}")
 
 
-# 2.5 接收并解析出uid
-def recv_uid_from_bc(server_socket, aes_key_to_bc):
-    format_and_print(f'2.5 Send gid and user identity information to the blockchain', '.', 'left')
+# 3.7.接收并解析出uid
+def recv_uid_from_bc(gw_socket, aes_key_to_bc):
+    format_and_print(f'3.7.Send gid and user identity information to the blockchain', '.')
     try:
-        data, transfer_time = recv_with_header(server_socket)
+        data, transfer_time = recv_with_header(gw_socket)
         user_id = convert_message(convert_message(aes_decrypt(aes_key_to_bc, data), 'str'), 'UUID')
-        format_and_print('2.5 Receive and parse out the uid.', '-', 'center')
+        format_and_print('3.7.Receive and parse out the uid.', '-', 'center')
         return user_id, transfer_time
+    except Exception as e:
+        format_and_print(f"3.7.Unexpected error occurred in recv_uid_from_bc(): {str(e)}")
 
-    except KeyboardInterrupt as k:
-        print('KeyboardInterrupt:', k)
-    except ValueError as v:
-        print('ValueError:', v)
-    except TypeError as t:
-        print('TypeError:', t)
-    except IndexError as i:
-        print('IndexError:', i)
-    except AttributeError as a:
-        print('AttributeError:', a)
 
-# 2.6 生成网关签名,发送给用户
-def generate_gateway_sign(ecc, gateway_sign_key, user_id, gateway_private_key, user_public_key, user_socket):
-    format_and_print(f'2.5 Gateway signature being generated.', '.', 'left')
+# 3.8.保存与用户通信的密钥
+def save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gateway_verify_key, gateway_sign_key,
+                         user_pk, user_sig_pk):
+    format_and_print('3.8.Start storing keys', '.')
+    try:
+        user_folder_path = get_folder_path(str(user_id))
+        if os.path.exists(user_folder_path):
+            format_and_print(f'3.8.Gateway is registered')
+        else:
+            # 创建文件夹
+            os.makedirs(user_folder_path)
+            save_key_to_file(gateway_public_key, 'pk_gateway', user_folder_path)
+            save_key_to_file(gateway_private_key, 'sk_gateway', user_folder_path)
+            save_key_to_file(gateway_verify_key, 'pk_sig_gateway', user_folder_path)
+            save_key_to_file(gateway_sign_key, 'sk_sig_gateway', user_folder_path)
+            save_key_to_file(user_pk, 'pk_user', user_folder_path)
+            save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
+            format_and_print('3.8.The key is saved.', "-", "center")
+    except Exception as e:
+        format_and_print(f'3.8.Unexpected error in save_ecc_key():{str(e)}')
+
+
+# 3.9.生成网关签名,发送给用户
+def generate_gateway_sign(ecc, user_id, user_socket, gateway_sign_key, gateway_private_key, user_public_key):
+    format_and_print(f'3.9.Gateway signature being generated.', '.')
     try:
         gateway_signature = ecc.ecc_sign(gateway_sign_key, user_id.bytes)
-        # 发送gid，区块链签名
-        message2 = ecc.ecc_encrypt(gateway_private_key, user_public_key,
-                                   f"{user_id}||{gateway_signature}")
+        message2 = ecc.ecc_encrypt(gateway_private_key, user_public_key, f"{user_id}||{gateway_signature}")
         send_with_header(user_socket, convert_message(message2, 'bytes'))
-        format_and_print('2.5 Receive and parse out the uid.', '-', 'center')
+        format_and_print('3.9.Receive and parse out the uid.', '-', 'center')
     except Exception as e:
-        format_and_print(f'2.5 Error calling recv_uid_from_bc():{e}', chr(0x00D7), 'left')
+        format_and_print(f'3.9.Error calling generate_gateway_sign():{e}')
 
 
-# 2 用户注册流程
-def user_register(gateway_socket, user_socket, gid):
-    format_and_print(f'2. Start the user registration process.', ':', 'left')
+# 3.用户注册流程
+def user_register(gw_socket, user_socket, gw_id):
+    format_and_print(f'3.Start the user registration process.', ':')
     try:
-        gateway_sk, gateway_pk, gateway_sk_sig, gateway_pk_sig, ecc = gw_user_key()
-        # 交换密钥
-        user_pk, user_sig_pk, tt_u1, tt_u2, exchange_key_duration = user_pk_exchange(user_socket,
-                                                                                     gateway_pk,
-                                                                                     gateway_pk_sig)
-        time_dict1 = {'tt_u1': tt_u1, 'tt_u2': tt_u2, 'exchange_key_duration': exchange_key_duration}
-
-        gateway_folder_path = get_folder_path(str(gid))
-        sk_gw = load_key_from_file('sk_gw', gateway_folder_path)
-        pk_bc = load_key_from_file('pk_bc', gateway_folder_path)
-        aes_key = generate_aes_key(sk_gw, pk_bc)
-
-        client_hash_info, client_sig, tt_u = receive_user_info(user_socket, ecc, gateway_sk, user_pk)
-        verify_result = verify_user_sign(ecc, user_sig_pk, client_sig)
+        # 3.1.生成ecc密钥对
+        gateway_private_key, gateway_public_key, gateway_sign_key, gateway_verify_key, ecc = generate_gateway_ecc_key()
+        # 3.2.交换密钥
+        user_pk, user_sig_pk, tt_u1, tt_u2 = user_pk_exchange(user_socket, gateway_public_key, gateway_verify_key)
+        # 3.3.加载网关与区块链通信密钥
+        aes_key_to_bc = load_session_key(gw_id)
+        # 3.4.接收用户加密身份信息和用户签名
+        client_hash_info, client_sig, tt_u3 = receive_user_info(user_socket, ecc, gateway_private_key, user_pk)
+        # 3.5.验证用户签名
+        verify_result = verify_user_signature(ecc, user_sig_pk, client_sig)
         if verify_result:
-            send_gid_and_uinfo(gateway_socket, client_hash_info, aes_key, gid)
-            user_id, tt_b = recv_uid_from_bc(gateway_socket, aes_key)
-
-            user_folder_path = get_folder_path(str(user_id))
-            if os.path.exists(user_folder_path):
-                format_and_print(f'Gateway is registered', chr(0x00D7), 'left')
-            else:
-                # 创建文件夹
-                os.makedirs(user_folder_path)
-                save_key_to_file(gateway_pk, 'pk_gateway', user_folder_path)
-                save_key_to_file(gateway_sk, 'sk_gateway', user_folder_path)
-                save_key_to_file(gateway_pk_sig, 'pk_sig_gateway', user_folder_path)
-                save_key_to_file(gateway_sk_sig, 'sk_sig_gateway', user_folder_path)
-                save_key_to_file(user_pk, 'pk_user', user_folder_path)
-                save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
-
-            append_to_json(user_id, time_dict1)
-
-            generate_gateway_sign(ecc, gateway_sk_sig, user_id, gateway_sk, user_pk, user_socket)
-            format_and_print('2. Identity Registration Successful', "=", "center")
-            return user_id, tt_u, tt_b
+            format_and_print('3.5.User Signature Verification Successful', '-', 'center')
+            # 3.6.将gid和用户加密信息发送给区块链
+            send_gid_and_user_info(gw_socket, client_hash_info, aes_key_to_bc, gw_id)
+            # 3.7.接收并解析出uid
+            user_id, tt_b1 = recv_uid_from_bc(gw_socket, aes_key_to_bc)
+            # 3.8.保存与用户通信的密钥
+            save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gateway_verify_key, gateway_sign_key,
+                                 user_pk, user_sig_pk)
+            # 3.9.生成网关签名,发送给用户
+            generate_gateway_sign(ecc, gateway_sign_key, user_id, gateway_private_key, user_pk, user_socket)
+            format_and_print('3.Identity Registration Successful', "=", "center")
+            return user_id, tt_u1, tt_u2, tt_u3, tt_b1
         else:
-            format_and_print(f'2.3 User Signature Verification Failure!', chr(0x00D7), 'left')
+            format_and_print(f'3.5.User Signature Verification Failure!')
 
-    except KeyboardInterrupt as k:
-        print('KeyboardInterrupt:', k)
-    except ValueError as v:
-        print('ValueError:', v)
-    except TypeError as t:
-        print('TypeError:', t)
-    except IndexError as i:
-        print('IndexError:', i)
-    except AttributeError as a:
-        print('AttributeError:', a)
+    except Exception as e:
+        format_and_print(f'3.Error calling user_register():{e}')

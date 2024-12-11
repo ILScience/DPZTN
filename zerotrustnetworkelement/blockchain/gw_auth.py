@@ -135,7 +135,11 @@ def gw_auth(client_socket, client_hash_info):
         # 2.7 验证网关发送的令牌
         result = verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof,
                                  client_sig)
-        format_and_print('2.Successful authentication', '=', 'center')
-        return client_id, result, tt1, tt2, tt3
+        if result is b"AUTH_SUCCESS":
+            format_and_print('2.Successful authentication', '=', 'center')
+            return client_id, result, tt1, tt2, tt3
+        else:
+            format_and_print('2.Failed to authentication')
+            return None, None, None, None, None
     except Exception as e:
-        format_and_print(f'2.Authentication failure:{e}')
+        format_and_print(f'2.Authentication Error:{e}')

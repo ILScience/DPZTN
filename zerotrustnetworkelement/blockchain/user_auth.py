@@ -89,7 +89,11 @@ def user_auth(gw_socket, user_hash_info):
         send_user_info(gw_socket, user_hash_info, aes_key)
         # 4.5.接收网关传回的注册结果
         auth_result, tt3 = recv_auth_result(gw_socket)
-        format_and_print('4.Auth success', "=", "center")
-        return user_id, aes_key, tt1, auth_result, tt2, tt3
+        if auth_result is "AUTH_SUCCESS":
+            format_and_print('4.Auth success', "=", "center")
+            return user_id, aes_key, tt1, auth_result, tt2, tt3
+        else:
+            format_and_print('4.Auth failed')
+            return None, None, None, None, None, None
     except Exception as e:
         format_and_print(f'4.Error calling user_auth():{e}')

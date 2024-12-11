@@ -36,7 +36,7 @@ def exchange_pk_with_gw(client_socket, server_public_key, server_verify_key):
         gateway_public_key = convert_message(data, 'PublicKey')  # 接收网关公钥
         data, transfer_time2 = recv_with_header(client_socket)
         gateway_verify_key = convert_message(data, 'VerifyKey')  # 接收网关认证密钥
-        format_and_print('1.2.Key exchange successful', '=', 'center')
+        format_and_print('1.2.Key exchange successful', '-', 'center')
         return transfer_time1, transfer_time2, gateway_public_key, gateway_verify_key
     except ValueError as e:
         format_and_print(f'1.2.ValueError in exchange_pk_with_gw():{str(e)}')
@@ -82,7 +82,7 @@ def generate_gid(client_hash_info):
 
 
 # 1.5.创建以gid命名的文件夹存储公私钥
-def save_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
+def save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
                  client_public_key, client_verify_key):
     try:
         format_and_print('1.5.Start storing keys', '.')
@@ -133,24 +133,24 @@ def return_gid_and_signature(client_socket, client_id, ecc, server_sign_key, ser
 def gw_register(client_socket):
     format_and_print('1.Initiate the gateway registration process', ':')
     try:
-        # 1.生成区块链ecc密钥对
+        # 1.1.生成区块链ecc密钥对
         server_private_key, server_public_key, server_sign_key, server_verify_key, bc_ecc = generate_ecc_key()
-        # 2.与网关交换公钥
+        # 1.2.与网关交换公钥
         tt1, tt2, client_public_key, client_verify_key = exchange_pk_with_gw(client_socket, server_public_key,
                                                                              server_verify_key)
-        # 3.接收注册信息，并还原数据类型
+        # 1.3.接收注册信息，并还原数据类型
         client_hash_info, client_sig, tt3 = (
             recv_gw_identity_info(client_socket, bc_ecc, server_private_key, client_public_key))
-        # 4.生成gid，并返回gid注册状态查询结果
+        # 1.4.生成gid，并返回gid注册状态查询结果
         client_id = generate_gid(client_hash_info)
-        # 5.创建以gid命名的文件夹存储公私钥
-        save_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
+        # 1.5.创建以gid命名的文件夹存储公私钥
+        save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
                      client_public_key, client_verify_key)
-        # 6.验证网关签名
+        # 1.6.验证网关签名
         client_sig_verify_result = verify_client_sig(bc_ecc, client_verify_key, client_sig)
 
         if client_sig_verify_result:
-            # 7.返回区块链签名和gid
+            # 1.7.返回区块链签名和gid
             return_gid_and_signature(client_socket, client_id, bc_ecc, server_sign_key, server_private_key,
                                      client_public_key)
         else:
