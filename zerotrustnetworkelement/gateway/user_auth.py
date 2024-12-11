@@ -166,6 +166,9 @@ def user_auth(user_socket, gw_socket, gw_id):
     try:
         # 4.1.接收用户uid
         user_id, tt_u1 = recv_uid(user_socket)
+        '''
+            请求uid的注册状态和认证状态
+        '''
         # 4.2.加载密钥
         (blockchain_public_key, blockchain_verify_key, gw_public_key, gw_private_key,
          gw_verify_key, gw_sign_key, aes_key_to_bc, gateway_public_key, gateway_private_key,
@@ -187,6 +190,9 @@ def user_auth(user_socket, gw_socket, gw_id):
         verify_result = verify_gw_token(gateway_zk, token, gateway_signature, user_socket, gw_socket, aes_key_to_user,
                                         aes_key_to_bc, user_zk, proof, user_sig)
         if verify_result == b"AUTH_SUCCESS":
+            '''
+                请求修改用户认证状态
+            '''
             format_and_print('4.Successful authentication', '=', 'center')
             return user_id, aes_key_to_user, verify_result, tt_u1, tt_b1, tt_u2, tt_u3
         else:

@@ -77,16 +77,28 @@ def user_auth(gw_socket, user_hash_info):
     try:
         # 4.1.接收网关gid
         gw_id, gw_folder_path, tt1 = recv_gid(gw_socket)
+        '''
+            查询gid状态
+        '''
         # 4.2.加载密钥
+        '''
+            加载bc_public_key,bc_verify_key, gw_public_key, gw_verify_key，user_hash_info
+        '''
         (bc_public_key, bc_private_key, bc_verify_key, bc_sign_key, gw_public_key, gw_verify_key, user_hash_info,
          aes_key) = load_auth_key(gw_folder_path, user_hash_info)
         # 4.3.接收用户uid
         user_id, tt2 = recv_uid(gw_socket, aes_key)
+        '''
+            查询uid注册状态
+        '''
         # 4.4.将用户信息返回给网关
         send_user_info(gw_socket, user_hash_info, aes_key)
         # 4.5.接收网关传回的认证结果
         auth_result, tt3 = recv_auth_result(gw_socket,aes_key)
         if auth_result == b"AUTH_SUCCESS":
+            '''
+                更改用户认证状态
+            '''
             format_and_print('4.Auth success', "=", "center")
             return user_id, aes_key, tt1, auth_result, tt2, tt3
         else:

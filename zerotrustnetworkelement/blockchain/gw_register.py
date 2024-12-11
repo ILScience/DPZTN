@@ -151,6 +151,10 @@ def gw_register(client_socket):
             # 1.7.返回区块链签名和gid
             return_gid_and_signature(client_socket, client_id, bc_ecc, server_sign_key, server_private_key,
                                      client_public_key)
+            '''
+                上传gid，网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info；
+                更改注册状态
+            '''
         else:
             format_and_print(f'1.7 Gateway signature verification failed', chr(0x00D7), 'left')
         format_and_print('1.Gateway Registration Successful', "=", "center")

@@ -42,7 +42,7 @@ def gateway_main():
                 # 如果接收到网关身份注册请求
                 if request_type == b"GATEWAY REGISTRATION":
                     tt1, tt2, tt3, gw_hash_info, gid, verify_result = gw_register(gw_socket)
-                    # 创建文件夹，保存公钥私钥
+                    # 上传网关信息
                     register_end_time = get_timestamp()
                     register_duration = register_end_time - request_start_time
                     time_dict1 = {'tt1': tt1, 'tt2': tt2, 'tt3': tt3, 'register_duration': register_duration}

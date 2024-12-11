@@ -119,10 +119,15 @@ def gw_auth(client_socket, client_hash_info):
     try:
         # 2.1.接收网关gid
         client_id, tt1 = recv_gw_gid(client_socket)
+        '''
+            查询gid网关注册状态
+        '''
         # 2.2.加载密钥
-        (
-        server_public_key, server_private_key, server_verify_key, server_sign_key, client_public_key, client_verify_key,
-        client_hash_info) = load_auth_key(client_hash_info, client_id)
+        '''
+            加载网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
+        '''
+        (server_public_key, server_private_key, server_verify_key, server_sign_key, client_public_key,
+         client_verify_key, client_hash_info) = load_auth_key(client_hash_info, client_id)
         # 2.3.利用存储在区块链的网关信息生成签名
         aes_key, server_zk, server_signature = generate_bc_sign(server_private_key, client_public_key,
                                                                 client_hash_info)
@@ -136,6 +141,9 @@ def gw_auth(client_socket, client_hash_info):
         result = verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof,
                                  client_sig)
         if result == b"AUTH_SUCCESS":
+            '''
+                更改认证状态
+            '''
             format_and_print('2.Successful authentication', '=', 'center')
             return client_id, result, tt1, tt2, tt3
         else:
