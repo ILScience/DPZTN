@@ -1,8 +1,8 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from noknow.core import ZK, ZKSignature, ZKData
-from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, query_bc_pk, query_gw_sig_pk, \
-    query_bc_sig_pk, query_gw_hash_info, update_gid_auth_state
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, query_gw_hash_info, \
+    update_gid_auth_state
 
 
 # 2.1.接收网关gid
@@ -19,34 +19,33 @@ def recv_gw_gid(client_socket):
 
 
 # 2.2.加载密钥
-def load_auth_key(client_hash_info, client_id):
+def load_auth_key(loop, cli, org_admin, bc_ip, client_id):
     format_and_print('2.2.Start searching for keys required for authentication', '.')
     try:
+        '''
+            加载网关公钥，client_hash_info
+        '''
+        client_public_key = query_gw_pk(loop, cli, org_admin, bc_ip, client_id)
+        client_hash_info = query_gw_hash_info(loop, cli, org_admin, bc_ip, client_id)
         folder_path = get_folder_path('gateway' + str(client_id))
         # 查询之前的网关公钥，区块链公钥
-        server_public_key = load_key_from_file('pk_bc', folder_path)
         server_private_key = load_key_from_file('sk_bc', folder_path)
-        server_verify_key = load_key_from_file('pk_sig_bc', folder_path)
-        server_sign_key = load_key_from_file('sk_sig_bc', folder_path)
-        client_public_key = load_key_from_file('pk_gw', folder_path)
-        client_verify_key = load_key_from_file('pk_sig_gw', folder_path)
-        client_hash_info = client_hash_info
+        aes_key = generate_aes_key(server_private_key, client_public_key)
         format_and_print('2.2.Key required for successful query authentication', "_", "center")
-        return (server_public_key, server_private_key, server_verify_key, server_sign_key,
-                client_public_key, client_verify_key, client_hash_info)
+        return client_hash_info, aes_key
     except Exception as e:
         format_and_print(f'2.2.Unexpected error in load_auth_key():{e}')
 
 
 # 2.3.利用存储在区块链的网关信息生成签名
-def generate_bc_sign(server_private_key, client_public_key, client_hash_info):
+def generate_bc_sign(client_hash_info):
     format_and_print('2.3.Signature being generated from gid store information', '.')
     try:
-        aes_key = generate_aes_key(server_private_key, client_public_key)
+
         server_zk = ZK.new(curve_name="secp384r1", hash_alg="sha3_512")
         server_signature: ZKSignature = server_zk.create_signature(client_hash_info)
         format_and_print('2.3.Successfully generated signature based on gid store information', "_", "center")
-        return aes_key, server_zk, server_signature
+        return server_zk, server_signature
     except Exception as e:
         format_and_print(f'2.3.Unexpected error in generate_bc_sign():{e}')
 
@@ -120,44 +119,44 @@ def gw_auth(client_socket, loop, cli, org_admin, bc_ip):
     format_and_print('2.Starting the authentication process', ':')
     try:
         # 2.1.接收网关gid
-        client_id, tt1 = recv_gw_gid(client_socket)
-        response = query_gid_state(loop, cli, org_admin, bc_ip, client_id)
-        '''
-            查询gid网关注册状态
-        '''
-        # 2.2.加载密钥
-        server_public_key = query_bc_pk(loop, cli, org_admin, bc_ip, client_id)
-        client_public_key = query_gw_pk(loop, cli, org_admin, bc_ip, client_id)
-        server_verify_key = query_bc_sig_pk(loop, cli, org_admin, bc_ip, client_id)
-        client_verify_key = query_gw_sig_pk(loop, cli, org_admin, bc_ip, client_id)
-        client_hash_info = query_gw_hash_info(loop, cli, org_admin, bc_ip, client_id)
-
-        '''
-            加载网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
-        '''
-        (server_public_key, server_private_key, server_verify_key, server_sign_key, client_public_key,
-         client_verify_key, client_hash_info) = load_auth_key(client_hash_info, client_id)
-        # 2.3.利用存储在区块链的网关信息生成签名
-        aes_key, server_zk, server_signature = generate_bc_sign(server_private_key, client_public_key,
-                                                                client_hash_info)
-        # 2.4.接收网关签名信息
-        client_sig, client_zk, tt2 = recv_gw_sign(client_socket, aes_key)
-        # 2.5.生成签名令牌并发送给网关
-        generate_token_and_send(server_zk, client_hash_info, client_zk, aes_key, client_socket)
-        # 2.6.接收网关发送的proof
-        proof, token, tt3 = recv_gw_proof(client_socket, aes_key)
-        # 2.7 验证网关发送的令牌
-        result = verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof,
-                                 client_sig)
-        if result == b"AUTH_SUCCESS":
-            response = update_gid_auth_state(loop, cli, org_admin, bc_ip, client_id)
-            '''
-                更改认证状态
-            '''
-            format_and_print('2.Successful authentication', '=', 'center')
-            return client_id, result, tt1, tt2, tt3
+        gw_id, tt1 = recv_gw_gid(client_socket)
+        # 查询gid网关注册状态
+        gid_state = query_gid_state(loop, cli, org_admin, bc_ip, gw_id)
+        if gid_state == '10':
+            # 2.2.加载密钥
+            client_hash_info, aes_key = load_auth_key(loop, cli, org_admin, bc_ip, gw_id)
+            # 2.3.利用存储在区块链的网关信息生成签名
+            server_zk, server_signature = generate_bc_sign(client_hash_info)
+            # 2.4.接收网关签名信息
+            client_sig, client_zk, tt2 = recv_gw_sign(client_socket, aes_key)
+            # 2.5.生成签名令牌并发送给网关
+            generate_token_and_send(server_zk, client_hash_info, client_zk, aes_key, client_socket)
+            # 2.6.接收网关发送的proof
+            proof, token, tt3 = recv_gw_proof(client_socket, aes_key)
+            # 2.7 验证网关发送的令牌
+            result = verify_gw_token(server_zk, token, server_signature, client_socket, aes_key, client_zk, proof,
+                                     client_sig)
+            if result == b"AUTH_SUCCESS":
+                # 更新网关认证状态
+                response = update_gid_auth_state(loop, cli, org_admin, bc_ip, gw_id, result)
+                if response is True:
+                    format_and_print('Success to update gid authentication state', '-', 'center')
+                    format_and_print('2.Successful authentication', '=', 'center')
+                    return gw_id, tt1, tt2, tt3
+                else:
+                    format_and_print(f'Failed to update gid authentication state:{response}')
+            else:
+                format_and_print('2.Failed to authentication')
+                return None, None, None, None
+        elif gid_state == '00':
+            format_and_print(f'{gw_id} not register yet:{gid_state}')
+            return None, None, None, None
+        elif gid_state == '11':
+            format_and_print(f'{gw_id} already authentication:{gid_state}')
+            return None, None, None, None
         else:
-            format_and_print('2.Failed to authentication')
-            return None, None, None, None, None
+            format_and_print(f'Illegal state:{gid_state}')
+            return None, None, None, None
+
     except Exception as e:
         format_and_print(f'2.Authentication Error:{e}')

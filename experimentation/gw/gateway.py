@@ -18,12 +18,12 @@ from zerotrustnetworkelement.gateway.user_auth import *
 # 1.网关注册
 def gateway_register(gw_socket):
     register_start_time = get_timestamp()
-    gw_id, reg_result, tt1, tt2, tt3 = gw_register(gw_socket)
+    gw_id, tt1, tt2, tt3 = gw_register(gw_socket)
     register_end_time = get_timestamp()
     register_duration = register_end_time - register_start_time
     time_dict1 = {'tt1': tt1, 'tt2': tt2, 'tt3': tt3, 'register_duration': register_duration}
     append_to_json(gw_id, time_dict1)
-    return gw_id, reg_result
+    return gw_id
 
 
 # 2.网关认证
@@ -47,7 +47,7 @@ def gateway_main():
         gw_socket.connect((bc_ip, bc_port))  # 连接到区块链服务器
         format_and_print(f"Connected to blockchain server at {bc_ip}:{bc_port} from {gw_ip}:{gw_port}", '.', 'left')
         # 网关注册
-        gw_id, reg_result = gateway_register(gw_socket)
+        gw_id = gateway_register(gw_socket)
         # 网关认证
         authentication_result = gateway_auth(gw_socket, gw_id)
 
@@ -85,12 +85,12 @@ def user_main(gw_socket, gw_id):
                                       'user_register_duration': user_register_duration}
                         append_to_json(user_id, time_dict3)
                     elif request_type == b'USER AUTHENTICATION':
-                        user_id, aes_key_to_user, result, tt_u4, tt_b2, tt_u5, tt_u6 = user_auth(user_socket,
-                                                                                                 gw_socket, gw_id)
+                        user_id, tt_u4, tt_u5, tt_u6, tt_b2, tt_b3, tt_b4 = user_auth(
+                            user_socket, gw_socket, gw_id)
                         auth_end_time = get_timestamp()
                         user_auth_duration = auth_end_time - request_start_time
-                        time_dict4 = {'tt_u4': tt_u4, 'tt_b2': tt_b2, 'tt_u5': tt_u5, 'tt_u6': tt_u6,
-                                      'user_auth_duration': user_auth_duration}
+                        time_dict4 = {'tt_u4': tt_u4, 'tt_u5': tt_u5, 'tt_u6': tt_u6, 'tt_b2': tt_b2, 'tt_b3': tt_b3,
+                                      'tt_b4': tt_b4, 'user_auth_duration': user_auth_duration}
                         append_to_json(user_id, time_dict4)
 
                 except KeyboardInterrupt as k:

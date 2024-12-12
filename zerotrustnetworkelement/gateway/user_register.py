@@ -114,12 +114,12 @@ def save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gatew
         else:
             # 创建文件夹
             os.makedirs(user_folder_path)
-            save_key_to_file(gateway_public_key, 'pk_gateway', user_folder_path)
+            # save_key_to_file(gateway_public_key, 'pk_gateway', user_folder_path)
             save_key_to_file(gateway_private_key, 'sk_gateway', user_folder_path)
-            save_key_to_file(gateway_verify_key, 'pk_sig_gateway', user_folder_path)
+            # save_key_to_file(gateway_verify_key, 'pk_sig_gateway', user_folder_path)
             save_key_to_file(gateway_sign_key, 'sk_sig_gateway', user_folder_path)
-            save_key_to_file(user_pk, 'pk_user', user_folder_path)
-            save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
+            # save_key_to_file(user_pk, 'pk_user', user_folder_path)
+            # save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
             format_and_print('3.8.The key is saved.', "-", "center")
     except Exception as e:
         format_and_print(f'3.8.Unexpected error in save_ecc_key():{str(e)}')
@@ -130,11 +130,24 @@ def generate_gateway_sign(ecc, user_id, user_socket, gateway_sign_key, gateway_p
     format_and_print(f'3.9.Gateway signature being generated.', '.')
     try:
         gateway_signature = ecc.ecc_sign(gateway_sign_key, user_id.bytes)
-        message2 = ecc.ecc_encrypt(gateway_private_key, user_public_key, f"{user_id}||{gateway_signature}")
-        send_with_header(user_socket, convert_message(message2, 'bytes'))
+        message3 = ecc.ecc_encrypt(gateway_private_key, user_public_key, f"{user_id}||{gateway_signature}")
+        send_with_header(user_socket, convert_message(message3, 'bytes'))
         format_and_print('3.9.Receive and parse out the uid.', '-', 'center')
     except Exception as e:
         format_and_print(f'3.9.Error calling generate_gateway_sign():{e}')
+
+
+# 3.10.上传网关密钥和用户公钥,和认证状态(sc)
+def send_user_info(gw_socket, aes_key_to_bc, gateway_public_key, gateway_verify_key, user_pk, user_sig_pk,
+                   verify_result):
+    format_and_print('3.10.Sending user information to blockchain for saving', '.')
+    try:
+        data = f'{gateway_public_key}||{gateway_verify_key}||{user_pk}||{user_sig_pk}||{verify_result}'
+        message4 = aes_encrypt(aes_key_to_bc, convert_message(data, 'bytes'))
+        format_and_print('3.10.User information sent', '-', 'center')
+        send_with_header(gw_socket, message4)
+    except Exception as e:
+        format_and_print(f'3.10.Error calling send_keys_to_bc():{e}')
 
 
 # 3.用户注册流程
@@ -162,11 +175,9 @@ def user_register(gw_socket, user_socket, gw_id):
                                  user_pk, user_sig_pk)
             # 3.9.生成网关签名,发送给用户
             generate_gateway_sign(ecc, user_id, user_socket, gateway_sign_key, gateway_private_key, user_pk)
-
-            send_with_header(gw_socket,verify_result)
-            '''
-                请求修改用户注册状态
-            '''
+            # 3.10.上传网关密钥和用户公钥
+            send_user_info(gw_socket, aes_key_to_bc, gateway_public_key, gateway_verify_key, user_pk, user_sig_pk,
+                           verify_result)
             format_and_print('3.Identity Registration Successful', "=", "center")
             return user_id, tt_u1, tt_u2, tt_u3, tt_b1
         else:

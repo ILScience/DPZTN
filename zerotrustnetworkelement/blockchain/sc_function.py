@@ -1,6 +1,5 @@
 # 调用智能合约函数
 from zerotrustnetworkelement.blockchain.bc_configure import *
-from zerotrustnetworkelement.function import *
 
 
 # 查询gid是否注册
@@ -31,14 +30,14 @@ def update_gid_info(loop, cli, org, ip, gid, server_public_key, server_verify_ke
 
 
 # 更新注册状态
-def update_gid_reg_state(loop, cli, org, ip, gid):
+def update_gid_reg_state(loop, cli, org, ip, gid, client_sig_verify_result):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid],
+        args=[gid, client_sig_verify_result],
         cc_name='ztne',
-        fcn='update_reg_state'
+        fcn='update_gid_reg_state'
     ))
     return response
 
@@ -107,15 +106,15 @@ def query_gw_hash_info(loop, cli, org, ip, gid):
     return response
 
 
-# 更新注册状态
-def update_gid_auth_state(loop, cli, org, ip, gid):
+# 更新网关注册状态
+def update_gid_auth_state(loop, cli, org, ip, gid, result):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid],
+        args=[gid, result],
         cc_name='ztne',
-        fcn='update_auth_state'
+        fcn='update_gid_auth_state'
     ))
     return response
 
@@ -132,26 +131,27 @@ def query_uid_state(loop, cli, org, ip, uid):
     return response
 
 
-def update_uid_info(loop, cli, org, ip, uid, user_hash_info):
+def update_uid_info(loop, cli, org, ip, uid, user_hash_info, gateway_public_key, gateway_verify_key, user_pk,
+                    user_sig_pk):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid, user_hash_info],
+        args=[uid, user_hash_info, gateway_public_key, gateway_verify_key, user_pk, user_sig_pk],
         cc_name='ztne',
         fcn='update_uid_info'
     ))
     return response
 
-
-def update_uid_reg_state(loop, cli, org, ip, uid):
+# 更新注册状态
+def update_uid_reg_state(loop, cli, org, ip, uid, client_sig_verify_result):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid],
+        args=[uid, client_sig_verify_result],
         cc_name='ztne',
-        fcn='update_uid_reg_state'
+        fcn='update_gid_reg_state'
     ))
     return response
 
@@ -167,6 +167,7 @@ def query_user_hash_info(loop, cli, org, ip, uid):
     ))
     return response
 
+
 def update_uid_auth_state(loop, cli, org, ip, uid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
@@ -175,5 +176,18 @@ def update_uid_auth_state(loop, cli, org, ip, uid):
         args=[uid],
         cc_name='ztne',
         fcn='update_uid_auth_state'
+    ))
+    return response
+
+
+# 查询网关公钥
+def query_gateway_pk(loop, cli, org, ip, gid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[gid],
+        cc_name='ztne',
+        fcn='query_gateway_pk'
     ))
     return response

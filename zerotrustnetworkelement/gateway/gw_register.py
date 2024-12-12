@@ -1,5 +1,4 @@
 from zerotrustnetworkelement.encryption.ecc import *
-from zerotrustnetworkelement.gateway.gw_function import *
 from zerotrustnetworkelement.encryption.myhash import *
 from zerotrustnetworkelement.function import *
 
@@ -103,7 +102,7 @@ def save_gw_ecc_key(client_id, client_public_key, client_private_key, client_ver
                     server_public_key, server_verify_key):
     format_and_print('1.7.Start saving ecc keys', '.')
     try:
-        folder_path = get_folder_path('gateway'+str(client_id))
+        folder_path = get_folder_path('gateway' + str(client_id))
         # 判断文件夹是否存在
         if os.path.exists(folder_path):
             format_and_print(f'1.7.Gateway is registered')
@@ -141,11 +140,13 @@ def gw_register(client_socket):
         client_id, server_sig, tt3 = decrypt_and_verify_data(client_socket, ecc, client_private_key, server_public_key)
         # 1.6.验证区块链签名
         verify_result = verify_server_signature(ecc, server_verify_key, server_sig)
-        # 1.7.保存ecc密钥
-        save_gw_ecc_key(client_id, client_public_key, client_private_key, client_verify_key, client_sign_key,
-                        server_public_key, server_verify_key)
-        format_and_print('Gateway registration complete', '-*', 'center')
-        return client_id, verify_result, tt1, tt2, tt3
-
+        if verify_result:
+            # 1.7.保存ecc密钥
+            save_gw_ecc_key(client_id, client_public_key, client_private_key, client_verify_key, client_sign_key,
+                            server_public_key, server_verify_key)
+            format_and_print('1.Gateway registration Successful', '=', 'center')
+            return client_id, tt1, tt2, tt3
+        else:
+            format_and_print('1.Failed to registration')
     except Exception as e:
         format_and_print(f'1.Error calling gw_register():{e}')
