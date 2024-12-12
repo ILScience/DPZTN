@@ -117,7 +117,7 @@ def user_auth(gw_socket, loop, cli, org_admin, bc_ip):
                 auth_result, tt3 = recv_auth_result(gw_socket, aes_key)
                 if auth_result == b"AUTH_SUCCESS":
                     '''更新用户认证状态'''
-                    response = update_uid_auth_state(loop, cli, org_admin, bc_ip, user_id)
+                    response = update_uid_auth_state(loop, cli, org_admin, bc_ip, user_id, auth_result)
                     if response is True:
                         format_and_print('Success to update uid authentication state', '-', 'center')
                         format_and_print('4.Auth success', "=", "center")

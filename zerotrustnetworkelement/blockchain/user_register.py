@@ -1,7 +1,7 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from zerotrustnetworkelement.blockchain.bc_function import *
-from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, update_uid_info, \
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, register_uid, \
     query_uid_state, update_uid_reg_state
 
 
@@ -103,8 +103,8 @@ def user_register(gw_socket, loop, cli, org_admin, bc_ip):
                 gateway_public_key, gateway_verify_key, user_pk, user_sig_pk, verify_result = recv_user_info(gw_socket,
                                                                                                              aes_key)
                 ''' 上传uid,user_hash_info，'''
-                response = update_uid_info(loop, cli, org_admin, bc_ip, user_id, user_hash_info, gateway_public_key,
-                                           gateway_verify_key, user_pk, user_sig_pk)
+                response = register_uid(loop, cli, org_admin, bc_ip, user_id, user_hash_info, gateway_public_key,
+                                        gateway_verify_key, user_pk, user_sig_pk)
                 if response is True:
                     format_and_print('Update uid information successful', '-', 'center')
                     '''更新用户的注册状态'''

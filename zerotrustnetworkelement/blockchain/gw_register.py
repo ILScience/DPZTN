@@ -2,7 +2,7 @@ from zerotrustnetworkelement.blockchain.bc_function import *
 import cryptography.exceptions
 from zerotrustnetworkelement.encryption.ecc import *
 from zerotrustnetworkelement.function import *
-from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, update_gid_info, update_gid_reg_state
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, register_gid, update_gid_reg_state
 
 '''可以放入function'''
 
@@ -160,8 +160,8 @@ def gw_register(client_socket, loop, cli, org_admin, bc_ip):
                 '''
                     上传gid，网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
                 '''
-                response = update_gid_info(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
-                                           client_public_key, client_verify_key, client_hash_info)
+                response = register_gid(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
+                                        client_public_key, client_verify_key, client_hash_info)
                 if response is True:
                     format_and_print('Update gid information successful', '-', 'center')
                     # 更改注册状态
