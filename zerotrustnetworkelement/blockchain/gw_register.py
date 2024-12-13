@@ -2,7 +2,7 @@ from zerotrustnetworkelement.blockchain.bc_function import *
 import cryptography.exceptions
 from zerotrustnetworkelement.encryption.ecc import *
 from zerotrustnetworkelement.function import *
-from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, register_gid, update_gid_reg_state
+from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, register_gid
 
 '''可以放入function'''
 
@@ -161,22 +161,17 @@ def gw_register(client_socket, loop, cli, org_admin, bc_ip):
                     上传gid，网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
                 '''
                 response = register_gid(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
-                                        client_public_key, client_verify_key, client_hash_info)
-                if response is True:
-                    format_and_print('Update gid information successful', '-', 'center')
-                    # 更改注册状态
-                    response = update_gid_reg_state(loop, cli, org_admin, bc_ip, client_id, client_sig_verify_result)
-                    if response is True:
-                        format_and_print('Update gid state successful', '-', 'center')
-                        format_and_print('1.Gateway Registration Successful', "=", "center")
-                        return client_id, tt1, tt2, tt3
-                    else:
-                        format_and_print(f'Update gid state failed:{response}')
-                else:
-                    format_and_print(f'Update gid information failed:{response}')
+                                        client_public_key, client_verify_key, client_hash_info, "10")
             else:
+                response = register_gid(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
+                                        client_public_key, client_verify_key, client_hash_info, "00")
                 format_and_print(f'1.7 Gateway signature verification failed')
-                return None, None, None, None
+            if response is True:
+                format_and_print('Update gid information successful', '-', 'center')
+                format_and_print('1.Gateway Registration Successful', "=", "center")
+                return client_id, tt1, tt2, tt3
+            else:
+                format_and_print(f'Update gid information failed:{response}')
         elif gid_state == '10':
             format_and_print(f'{client_id} already register:{gid_state}')
             return None, None, None, None

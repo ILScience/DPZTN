@@ -209,7 +209,7 @@ def user_auth(user_socket, gw_socket, gw_id):
                 请求修改用户认证状态
             '''
             format_and_print('4.Successful authentication', '=', 'center')
-            return user_id, aes_key_to_user, verify_result, tt_u1, tt_u2, tt_u3, tt_b1, tt_b2, tt_b3
+            return user_id, tt_u1, tt_u2, tt_u3, tt_b1, tt_b2, tt_b3
         else:
             format_and_print('4.Failed to authentication')
             return None, None, None, None, None, None, None

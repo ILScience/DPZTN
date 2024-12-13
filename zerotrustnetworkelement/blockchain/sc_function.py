@@ -16,27 +16,14 @@ def query_gid_state(loop, cli, org, ip, gid):
 
 
 # 2.上传网关注册信息
-def register_gid(loop, cli, org, ip, gid, bc_pk, bc_sig_pk, gw_pk, gw_sig_pk, gw_hash_info):
+def register_gid(loop, cli, org, ip, gid, bc_pk, bc_sig_pk, gw_pk, gw_sig_pk, gw_hash_info, client_sig_verify_result):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid, bc_pk, bc_sig_pk, gw_pk, gw_sig_pk, gw_hash_info],
+        args=[gid, bc_pk, bc_sig_pk, gw_pk, gw_sig_pk, gw_hash_info, client_sig_verify_result],
         cc_name='ztne',
         fcn='register_gid'
-    ))
-    return response
-
-
-# 3.更新注册状态
-def update_gid_reg_state(loop, cli, org, ip, gid, gw_verify_result):
-    response = loop.run_until_complete(cli.chaincode_invoke(
-        requestor=org,
-        channel_name='mychannel',
-        peers=[ip_peer_map[ip]],
-        args=[gid, gw_verify_result],
-        cc_name='ztne',
-        fcn='update_gid_reg_state'
     ))
     return response
 
@@ -107,27 +94,15 @@ def query_uid_state(loop, cli, org, ip, uid):
 
 
 # 9.uid注册
-def register_uid(loop, cli, org, ip, uid, user_hash_info, gateway_pk, gateway_sig_pk, user_pk, user_sig_pk):
+def register_uid(loop, cli, org, ip, uid, gid, user_hash_info, gateway_pk, gateway_sig_pk, user_pk, user_sig_pk,
+                 user_reg_verify_result):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid, user_hash_info, gateway_pk, gateway_sig_pk, user_pk, user_sig_pk],
+        args=[uid, gid, user_hash_info, gateway_pk, gateway_sig_pk, user_pk, user_sig_pk, user_reg_verify_result],
         cc_name='ztne',
         fcn='register_uid'
-    ))
-    return response
-
-
-# 10.更新注册状态
-def update_uid_reg_state(loop, cli, org, ip, uid, user_reg_verify_result):
-    response = loop.run_until_complete(cli.chaincode_invoke(
-        requestor=org,
-        channel_name='mychannel',
-        peers=[ip_peer_map[ip]],
-        args=[uid, user_reg_verify_result],
-        cc_name='ztne',
-        fcn='update_gid_reg_state'
     ))
     return response
 
@@ -158,14 +133,14 @@ def update_uid_auth_state(loop, cli, org, ip, uid, auth_result):
     return response
 
 
-# 13.查询网关公钥
-def query_gateway_pk(loop, cli, org, ip, uid):
+# 13.查询用户公钥
+def query_user_pk(loop, cli, org, ip, uid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
         args=[uid],
         cc_name='ztne',
-        fcn='query_gateway_pk'
+        fcn='query_user_pk'
     ))
     return response

@@ -1,7 +1,7 @@
 from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_bc_pk, query_gw_pk, \
-    query_user_hash_info, query_uid_state, update_uid_auth_state, query_gateway_pk
+    query_user_hash_info, query_uid_state, update_uid_auth_state, query_user_pk
 
 
 # 4.1.接收网关gid
@@ -59,7 +59,7 @@ def return_keys_to_user(gw_socket, loop, cli, org_admin, bc_ip, aes_key, user_id
     format_and_print('4.5.Start searching for keys required for authentication', '.')
     try:
         user_state = query_uid_state(loop, cli, org_admin, bc_ip, user_id)
-        user_public_key = query_gateway_pk(loop, cli, org_admin, bc_ip, user_id)
+        user_public_key = query_user_pk(loop, cli, org_admin, bc_ip, user_id)
         message = aes_encrypt(aes_key, convert_message(f'{user_state}||{user_public_key}', 'bytes'))
         send_with_header(gw_socket, convert_message(message, 'bytes'))
         format_and_print('4.5.Key required for successful query authentication', "_", "center")

@@ -2,7 +2,7 @@ from zerotrustnetworkelement.function import *
 from zerotrustnetworkelement.encryption.ecdh import *
 from zerotrustnetworkelement.blockchain.bc_function import *
 from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, query_gw_pk, register_uid, \
-    query_uid_state, update_uid_reg_state
+    query_uid_state
 
 
 # 3.1.接收gid
@@ -96,30 +96,29 @@ def user_register(gw_socket, loop, cli, org_admin, bc_ip):
             user_hash_info, user_id, tt1 = receive_user_identity(gw_socket, bc_private_key, gw_public_key)
             '''查询user状态'''
             uid_state = query_uid_state(loop, cli, org_admin, bc_ip, user_id)
-            if uid_state == '00':
+            if uid_state == '000':
                 # 3.4.发送uid给网关
                 aes_key = return_uid_to_gateway(bc_private_key, gw_public_key, user_id, gw_socket)
                 # 3.5.接收密钥和用户注册状态
                 gateway_public_key, gateway_verify_key, user_pk, user_sig_pk, verify_result = recv_user_info(gw_socket,
                                                                                                              aes_key)
                 ''' 上传uid,user_hash_info，'''
-                response = register_uid(loop, cli, org_admin, bc_ip, user_id, user_hash_info, gateway_public_key,
-                                        gateway_verify_key, user_pk, user_sig_pk)
+                response = register_uid(loop, cli, org_admin, bc_ip, user_id, gw_id, user_hash_info, gateway_public_key,
+                                        gateway_verify_key, user_pk, user_sig_pk, "100")
                 if response is True:
                     format_and_print('Update uid information successful', '-', 'center')
-                    '''更新用户的注册状态'''
-                    response = update_uid_reg_state(loop, cli, org_admin, bc_ip, user_id, verify_result)
-                    if response is True:
-                        format_and_print('Update gid state successful', '-', 'center')
-                        format_and_print('3.User Registration Successful', "=", "center")
-                        return user_id, tt1
+                    format_and_print('3.User Registration Successful', "=", "center")
+                    return user_id, tt1
                 else:
                     format_and_print(f'Update uid state failed:{response}')
-            elif uid_state == '10':
-                format_and_print(f'{user_id} already register:{uid_state}')
+            elif uid_state == '100':
+                format_and_print(f'{user_id} already registered:{uid_state}')
                 return None, None
-            elif gid_state == '11':
-                format_and_print(f'{user_id} already authentication:{uid_state}')
+            elif gid_state == '110':
+                format_and_print(f'{user_id} already authenticated:{uid_state}')
+                return None, None
+            elif gid_state == '111':
+                format_and_print(f'{user_id} already accessed:{uid_state}')
                 return None, None
             else:
                 format_and_print(f'Illegal state:{gid_state}')
