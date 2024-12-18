@@ -37,15 +37,17 @@ def user_main():
         user_socket.connect((gateway_ip, gateway_port))  # 连接到区块链服务器
         format_and_print(f"Connected to blockchain server at {gateway_ip}:{gateway_port} from {user_ip}:{user_port}",
                          '.', 'left')
-
         uid, reg_result = user_register(user_socket)
-        user_authentication(user_socket, uid)
-
-    except KeyboardInterrupt as k:
-        print(f'KeyboardInterrupt: {k}')
+        if reg_result:
+            user_authentication(user_socket, uid)
+            user_socket.close()
+        user_socket.close()
+    except KeyboardInterrupt:
+        user_socket.close()
     except AttributeError as a:
         print(f'AttributeError: {a}')
     except Exception as e:  # 捕获其他异常
+        user_socket.close()
         print(f'Unexpected error: {e}')
 
 

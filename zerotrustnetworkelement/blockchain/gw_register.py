@@ -2,7 +2,7 @@ from zerotrustnetworkelement.blockchain.bc_function import *
 import cryptography.exceptions
 from zerotrustnetworkelement.encryption.ecc import *
 from zerotrustnetworkelement.function import *
-from zerotrustnetworkelement.blockchain.sc_function import query_gid_state, register_gid
+from zerotrustnetworkelement.blockchain.sc_function import query_gid, register_gid
 
 '''可以放入function'''
 
@@ -142,45 +142,37 @@ def gw_register(client_socket, loop, cli, org_admin, bc_ip):
             recv_gw_identity_info(client_socket, bc_ecc, server_private_key, client_public_key))
         # 1.4.生成gid，并返回gid注册状态查询结果
         client_id = generate_gw_id(client_hash_info)
-        gid_state = query_gid_state(loop, cli, org_admin, bc_ip, client_id)
-        if gid_state == '00':
-            '''
-                查询gid是否注册
-            '''
-            # 1.5.创建以gid命名的文件夹存储公私钥
-            save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
-                            client_public_key, client_verify_key)
-            # 1.6.验证网关签名
-            client_sig_verify_result = verify_client_sig(bc_ecc, client_verify_key, client_sig)
+        gid_state = query_gid(loop, cli, org_admin, bc_ip, client_id)
+        # if bool(gid_state) is False:
+        '''
+            查询gid是否注册
+        '''
+        # 1.5.创建以gid命名的文件夹存储公私钥
+        save_bc_ecc_key(client_id, server_public_key, server_private_key, server_verify_key, server_sign_key,
+                        client_public_key, client_verify_key)
+        # 1.6.验证网关签名
+        client_sig_verify_result = verify_client_sig(bc_ecc, client_verify_key, client_sig)
 
-            if client_sig_verify_result:
-                # 1.7.返回区块链签名和gid
-                return_gid_and_signature(client_socket, client_id, bc_ecc, server_sign_key, server_private_key,
-                                         client_public_key)
-                '''
-                    上传gid，网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
-                '''
-                response = register_gid(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
-                                        client_public_key, client_verify_key, client_hash_info, "10")
-            else:
-                response = register_gid(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
-                                        client_public_key, client_verify_key, client_hash_info, "00")
-                format_and_print(f'1.7 Gateway signature verification failed')
-            if response is True:
-                format_and_print('Update gid information successful', '-', 'center')
-                format_and_print('1.Gateway Registration Successful', "=", "center")
-                return client_id, tt1, tt2, tt3
-            else:
-                format_and_print(f'Update gid information failed:{response}')
-        elif gid_state == '10':
-            format_and_print(f'{client_id} already register:{gid_state}')
-            return None, None, None, None
-        elif gid_state == '11':
-            format_and_print(f'{client_id} already authentication:{gid_state}')
-            return None, None, None, None
+        if client_sig_verify_result:
+            # 1.7.返回区块链签名和gid
+            return_gid_and_signature(client_socket, client_id, bc_ecc, server_sign_key, server_private_key,
+                                     client_public_key)
+            '''
+                上传gid，网关公钥，区块链公钥，网关认证公钥，区块链认证公钥，client_hash_info
+            '''
+            # print(client_id, type(client_id))
+            # print(server_public_key, type(server_public_key))
+            # print(server_verify_key, type(server_verify_key))
+            # print(client_public_key, type(client_public_key))
+            # print(client_verify_key, type(client_verify_key))
+            # print(client_hash_info, type(client_hash_info))
+            response = register_gid(loop, cli, org_admin, bc_ip, client_id, server_public_key, server_verify_key,
+                                    client_public_key, client_verify_key, client_hash_info, "10")
+            format_and_print('1.Gateway Registration Successful', "=", "center")
+            return client_id, tt1, tt2, tt3
         else:
-            format_and_print(f'Illegal state:{gid_state}')
-            return None, None, None, None
+            print("verify False")
+
 
     except Exception as e:
         format_and_print(f'1.Unexpected error in gw_register():{str(e)}')

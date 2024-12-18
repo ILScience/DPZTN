@@ -3,15 +3,16 @@ from zerotrustnetworkelement.blockchain.bc_configure import *
 
 
 # 1.查询gid是否注册
-def query_gid_state(loop, cli, org, ip, gid):
+def query_gid(loop, cli, org, ip, gid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid],
+        args=[str(gid)],
         cc_name='ztne',
-        fcn='query_gid_state'
+        fcn='query_gid'
     ))
+    print(response)
     return response
 
 
@@ -21,10 +22,29 @@ def register_gid(loop, cli, org, ip, gid, bc_pk, bc_sig_pk, gw_pk, gw_sig_pk, gw
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid, bc_pk, bc_sig_pk, gw_pk, gw_sig_pk, gw_hash_info, client_sig_verify_result],
+        args=[str(gid), str(bc_pk), str(bc_sig_pk), str(gw_pk), str(gw_sig_pk), str(gw_hash_info),
+              str(client_sig_verify_result)],
         cc_name='ztne',
         fcn='register_gid'
     ))
+    print(response)
+    return response
+
+
+#######################################################################################################################
+
+
+# 3.查询gid状态
+def query_gid_state(loop, cli, org, ip, gid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[str(gid)],
+        cc_name='ztne',
+        fcn='query_gid_state'
+    ))
+    print("gid state is ", response)
     return response
 
 
@@ -34,10 +54,11 @@ def query_bc_pk(loop, cli, org, ip, gid):
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid],
+        args=[str(gid)],
         cc_name='ztne',
         fcn='query_bc_pk'
     ))
+    print(response)
     return response
 
 
@@ -47,10 +68,11 @@ def query_gw_pk(loop, cli, org, ip, gid):
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid],
+        args=[str(gid)],
         cc_name='ztne',
         fcn='query_gw_pk'
     ))
+    print(response)
     return response
 
 
@@ -60,36 +82,42 @@ def query_gw_hash_info(loop, cli, org, ip, gid):
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid],
+        args=[str(gid)],
         cc_name='ztne',
         fcn='query_gw_hash_info'
     ))
+    print(response)
     return response
 
 
-# 7.更新网关注册状态
+# 7.更新网关认证状态
 def update_gid_auth_state(loop, cli, org, ip, gid, gid_auth_verify_result):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[gid, gid_auth_verify_result],
+        args=[str(gid), str(gid_auth_verify_result)],
         cc_name='ztne',
         fcn='update_gid_auth_state'
     ))
+    print(response)
     return response
 
 
+#######################################################################################################################
+
+
 # 8.查询uid状态
-def query_uid_state(loop, cli, org, ip, uid):
+def query_uid(loop, cli, org, ip, uid):
     response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid],
+        args=[str(uid)],
         cc_name='ztne',
-        fcn='query_uid_state'
+        fcn='query_uid'
     ))
+    print(response)
     return response
 
 
@@ -100,12 +128,30 @@ def register_uid(loop, cli, org, ip, uid, gid, user_hash_info, gateway_pk, gatew
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid, gid, user_hash_info, gateway_pk, gateway_sig_pk, user_pk, user_sig_pk, user_reg_verify_result],
+        args=[str(uid), str(gid), str(user_hash_info), str(gateway_pk), str(gateway_sig_pk), str(user_pk),
+              str(user_sig_pk), str(user_reg_verify_result)],
         cc_name='ztne',
         fcn='register_uid'
     ))
+    print(response)
     return response
 
+
+# 8.查询uid状态
+def query_uid_state(loop, cli, org, ip, uid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[str(uid)],
+        cc_name='ztne',
+        fcn='query_uid_state'
+    ))
+    print(response)
+    return response
+
+
+#######################################################################################################################
 
 # 11.查询用户身份信息
 def query_user_hash_info(loop, cli, org, ip, uid):
@@ -113,10 +159,11 @@ def query_user_hash_info(loop, cli, org, ip, uid):
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid],
+        args=[str(uid)],
         cc_name='ztne',
         fcn='query_user_hash_info'
     ))
+    print(response)
     return response
 
 
@@ -126,10 +173,11 @@ def update_uid_auth_state(loop, cli, org, ip, uid, auth_result):
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid, auth_result],
+        args=[str(uid), str(auth_result)],
         cc_name='ztne',
         fcn='update_uid_auth_state'
     ))
+    print(response)
     return response
 
 
@@ -139,8 +187,9 @@ def query_user_pk(loop, cli, org, ip, uid):
         requestor=org,
         channel_name='mychannel',
         peers=[ip_peer_map[ip]],
-        args=[uid],
+        args=[str(uid)],
         cc_name='ztne',
         fcn='query_user_pk'
     ))
+    print(response)
     return response

@@ -1,5 +1,5 @@
-from zerotrustnetworkelement.encryption.ecdh import *
 from zerotrustnetworkelement.encryption.ecc import *
+from zerotrustnetworkelement.encryption.ecdh import *
 from zerotrustnetworkelement.function import *
 
 
@@ -114,12 +114,8 @@ def save_gateway_ecc_key(user_id, gateway_public_key, gateway_private_key, gatew
         else:
             # 创建文件夹
             os.makedirs(user_folder_path)
-            # save_key_to_file(gateway_public_key, 'pk_gateway', user_folder_path)
             save_key_to_file(gateway_private_key, 'sk_gateway', user_folder_path)
-            # save_key_to_file(gateway_verify_key, 'pk_sig_gateway', user_folder_path)
             save_key_to_file(gateway_sign_key, 'sk_sig_gateway', user_folder_path)
-            # save_key_to_file(user_pk, 'pk_user', user_folder_path)
-            # save_key_to_file(user_sig_pk, 'pk_sig_user', user_folder_path)
             format_and_print('3.8.The key is saved.', "-", "center")
     except Exception as e:
         format_and_print(f'3.8.Unexpected error in save_ecc_key():{str(e)}')
@@ -142,10 +138,19 @@ def send_user_info(gw_socket, aes_key_to_bc, gateway_public_key, gateway_verify_
                    verify_result):
     format_and_print('3.10.Sending user information to blockchain for saving', '.')
     try:
-        data = f'{gateway_public_key}||{gateway_verify_key}||{user_pk}||{user_sig_pk}||{verify_result}'
-        message4 = aes_encrypt(aes_key_to_bc, convert_message(data, 'bytes'))
+        gw_pk_e = aes_encrypt(aes_key_to_bc, convert_message(f"{gateway_public_key}", "bytes"))
+        gw_sig_pk_e = aes_encrypt(aes_key_to_bc, convert_message(f"{gateway_verify_key}", "bytes"))
+        user_pk_e = aes_encrypt(aes_key_to_bc, convert_message(f"{user_pk}", "bytes"))
+        user_sig_pk_e = aes_encrypt(aes_key_to_bc, convert_message(f"{user_sig_pk}", "bytes"))
+        vr_e = aes_encrypt(aes_key_to_bc, convert_message(f"{verify_result}", "bytes"))
+
+        send_with_header(gw_socket, convert_message(gw_pk_e, "bytes"))
+        send_with_header(gw_socket, convert_message(gw_sig_pk_e, "bytes"))
+        send_with_header(gw_socket, convert_message(user_pk_e, "bytes"))
+        send_with_header(gw_socket, convert_message(user_sig_pk_e, "bytes"))
+        send_with_header(gw_socket, convert_message(vr_e, "bytes"))
+
         format_and_print('3.10.User information sent', '-', 'center')
-        send_with_header(gw_socket, message4)
     except Exception as e:
         format_and_print(f'3.10.Error calling send_keys_to_bc():{e}')
 
@@ -178,6 +183,9 @@ def user_register(gw_socket, user_socket, gw_id):
             # 3.10.上传网关密钥和用户公钥
             send_user_info(gw_socket, aes_key_to_bc, gateway_public_key, gateway_verify_key, user_pk, user_sig_pk,
                            verify_result)
+            print("aes key",generate_aes_key(gateway_private_key, user_pk))
+            print("gsk",gateway_private_key)
+            print("upk",user_pk)
             format_and_print('3.Identity Registration Successful', "=", "center")
             return user_id, tt_u1, tt_u2, tt_u3, tt_b1
         else:

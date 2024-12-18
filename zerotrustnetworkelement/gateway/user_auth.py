@@ -34,7 +34,7 @@ def load_aes_key_to_bc(gw_socket, gw_id):
     try:
         # 查询之前的网关公钥，区块链公钥
         data, tt_b = recv_with_header(gw_socket)
-        blockchain_public_key = PublicKey(convert_message(data, 'str'))
+        blockchain_public_key = PublicKey(convert_message(data, 'bytes'))
 
         gw_folder_path = get_folder_path('gateway' + str(gw_id))
         gw_private_key = load_key_from_file('sk_gw', gw_folder_path)
@@ -44,7 +44,7 @@ def load_aes_key_to_bc(gw_socket, gw_id):
         return blockchain_public_key, gw_private_key, aes_key_to_bc, tt_b
 
     except Exception as e:
-        format_and_print(f'4.3.Error calling recv_uid():{e}')
+        format_and_print(f'4.3.Error calling load_aes_key_to_bc():{e}')
 
 
 # 4.4.将uid发送给区块链
@@ -64,18 +64,21 @@ def load_keys_to_user(gw_socket, user_id, aes_key_to_bc):
     format_and_print('4.5.Start searching for keys required for authentication', '.')
     try:
         data, tt_b = recv_with_header(gw_socket)
-        message = aes_decrypt(aes_key_to_bc, data)
-        user_state, user_public_key = message.split('||')
-        user_public_key = PublicKey(user_public_key)
+        message = aes_decrypt(aes_key_to_bc, convert_message(data, "bytes"))
+        user_state, user_public_key = convert_message(message, 'str').split('||')
+        user_public_key = PublicKey(convert_message(user_public_key, "bytes"))
 
         user_folder_path = get_folder_path('user' + str(user_id))
         gateway_private_key = load_key_from_file('sk_gateway', user_folder_path)
+
+        print(gateway_private_key, type(gateway_private_key))
+        print(user_public_key, type(user_public_key))
         aes_key_to_user = generate_aes_key(gateway_private_key, user_public_key)
         format_and_print('4.5.Key required for successful query authentication', "_", "center")
         return user_state, aes_key_to_user, tt_b
 
     except Exception as e:
-        format_and_print(f'4.5.Error calling recv_uid():{e}')
+        format_and_print(f'4.5.Error calling load_keys_to_user():{e}')
 
 
 # 4.6.从区块链接收用户信息
@@ -110,12 +113,11 @@ def recv_gateway_sign(user_socket, aes_key_to_user):
     format_and_print('4.8.Receiving gateway signature message', '.')
     try:
         data, tt_u = recv_with_header(user_socket)
-        message1 = aes_decrypt(aes_key_to_user, data)
+        message1 = aes_decrypt(aes_key_to_user, convert_message(data, "bytes"))
         user_sig = convert_message(message1, 'ZKSignature')
         user_zk = ZK(user_sig.params)
         format_and_print('4.8.Successfully received gateway signature message', "_", "center")
         return user_sig, user_zk, tt_u
-
     except Exception as e:
         format_and_print(f'4.8.Error calling recv_gateway_sign():{e}')
 
@@ -183,7 +185,7 @@ def user_auth(user_socket, gw_socket, gw_id):
         # 4.2.发送gid给区块链
         send_gid(gw_id, gw_socket)
         # 4.3.加载aes_key_to_bc密钥
-        blockchain_public_key, gw_private_key, aes_key_to_bc, tt_b1 = load_aes_key_to_bc(user_id, gw_id)
+        blockchain_public_key, gw_private_key, aes_key_to_bc, tt_b1 = load_aes_key_to_bc(gw_socket, gw_id)
         # 4.4.发送请求类型，并将gid和uid发送给区块链
         send_uid(aes_key_to_bc, user_id, gw_socket)
         # 4.5.获取与用户通信的密钥
