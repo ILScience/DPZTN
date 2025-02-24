@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -67,6 +68,32 @@ type UInfo struct {
 	UserReputation    float64
 	UserRisk          float64
 	UserBHScore       float64
+}
+
+type User struct {
+	ASF           float64
+	AC            float64
+	ACC           float64
+	ACSF          float64
+	LAC           float64
+	CAPL          float64
+	ACF           float64
+	HBHS          float64
+	HBHR          float64
+	behaviorScore float64
+	CARL          float64
+	SACF          float64
+	MTP           float64
+}
+
+type Gateway struct {
+	GASF    float64
+	GAC     float64
+	GACSF   float64
+	GACC    float64
+	UserNum float64
+	GRV     float64
+	GRR     float64
 }
 
 // 获取当前时间字符串
@@ -754,6 +781,284 @@ func (t *SimpleChaincode) update_user_mark(stub shim.ChaincodeStubInterface, arg
 		}
 	}
 
+}
+
+// 计算信誉值
+func (t *SimpleChaincode) calculateReputation(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	user := User{
+		ASF:  0.8,
+		AC:   1.0,
+		ACC:  1.0,
+		ACSF: 0.5,
+		LAC:  0.2,
+		SACF: 0.1,
+		ACF:  0.9,
+		MTP:  0.05,
+		CARL: 2.0,
+		CAPL: 1.5,
+		HBHS: 0,
+	}
+
+	gateway := Gateway{
+		GASF:  0.8,
+		GAC:   1.0,
+		GACSF: 0.6,
+		GACC:  1.1,
+		GRV:   0.9,
+	}
+
+	// delta值
+	delta := map[string]float64{
+		"P_AS":  0.2,
+		"P_ACS": 0.3,
+		"P_LAF": 0.1,
+		"f_RL1": 0.4,
+	}
+	// 计算各概率，确保除法结果是浮动数
+	var P_AS, P_ACS, P_LAF, f_RL float64
+
+	if user.AC >= 0 && gateway.GAC >= 0 {
+		P_AS = (user.ASF / user.AC) * (gateway.GASF / gateway.GAC)
+	} else {
+		return errors.New("Invalid values for AC or GAC")
+	}
+
+	if user.ACC >= 0 && gateway.GACC >= 0 {
+		P_ACS = (user.ACSF / user.ACC) * (gateway.GACSF / gateway.GACC)
+		P_LAF = user.LAC / user.ACC
+	} else {
+		return errors.New("Invalid values for ACC or GACC")
+	}
+
+	// 判断 CARL 和 CAPL
+	if user.CARL <= user.CAPL {
+		f_RL = 1
+	} else if user.CAPL > 0 {
+		f_RL = math.Max(user.CAPL/(user.CARL-user.CAPL), 2)
+	} else {
+		f_RL = 1
+	}
+
+	// 判断 ACC - ACSF 是否超过阈值 n，调整信誉值
+	reputationPenalty := 1
+	if (user.ACC-user.ACSF) > 1 || (user.SACF/user.ACF) > 0.05 || user.MTP > 0.1 {
+		reputationPenalty = 3
+	}
+
+	// 联合概率
+	P_X_given_theta_plus := (P_AS * delta["P_AS"]) + (P_ACS * delta["P_ACS"]) + (P_LAF * delta["P_LAF"]) + (f_RL * delta["f_RL1"])
+
+	// 先验概率
+	P_X := (gateway.GASF / gateway.GAC) * (gateway.GACSF / gateway.GACC) * f_RL
+	P_theta_plus := gateway.GRV
+	if user.HBHS != 0 {
+		P_theta_plus = user.HBHS
+	}
+
+	// 信誉值计算
+	R_U_plus := (P_X_given_theta_plus * P_theta_plus) / (P_X * float64(reputationPenalty))
+	R_U_plus = 1 / (1 + math.Exp(-R_U_plus))
+
+	return R_U_plus
+}
+
+// 计算风险值
+func (t *SimpleChaincode) calculateRisk(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	user := User{
+		ASF:  0.8,
+		AC:   1.0,
+		ACC:  1.0,
+		ACSF: 0.5,
+		LAC:  0.2,
+		SACF: 0.1,
+		ACF:  0.9,
+		MTP:  0.05,
+		CARL: 2.0,
+		CAPL: 1.5,
+		HBHR: 0,
+	}
+
+	gateway := Gateway{
+		GASF:  0.8,
+		GAC:   1.0,
+		GACSF: 0.6,
+		GACC:  1.1,
+		GRR:   0.9,
+	}
+
+	// sigma值
+	sigma := map[string]float64{
+		"P_AF":      0.2,
+		"P_ACF":     0.3,
+		"f_RL2":     0.4,
+		"P_SAC":     0.1,
+		"MTP_index": 0.5,
+	}
+	// 计算各概率，确保除法结果是浮动数
+	var P_AF, P_ACF, f_RL, P_SAC float64
+
+	if user.AC > 0 {
+		P_AF = 1 - (user.ASF / user.AC)
+	} else {
+		P_AF = 0
+	}
+
+	if user.ACC > 0 {
+		P_ACF = 1 - (user.ACSF / user.ACC)
+	} else {
+		P_ACF = 0
+	}
+
+	// 判断 CARL 和 CAPL
+	if user.CARL <= user.CAPL {
+		f_RL = 1
+	} else if user.CAPL > 0 {
+		f_RL = math.Max(user.CAPL/(user.CARL-user.CAPL), 2)
+	} else {
+		f_RL = 1
+	}
+
+	if user.ACF > 0 {
+		P_SAC = user.SACF / user.ACF
+	} else {
+		P_SAC = 0
+	}
+
+	// 判断 ASF-ACSF 和 ACC-ACSF 是否超过阈值 n，调整风险值
+	riskBoost := 1.0
+	if (user.ACC-user.ACSF) > 1 || P_SAC > 0.05 || user.MTP > 0.1 {
+		riskBoost = 0.5
+	}
+
+	// 联合概率
+	P_X_given_theta_minus := (sigma["P_AF"] * P_AF) + (sigma["P_ACF"] * P_ACF) + (sigma["f_RL2"] * f_RL) + (sigma["P_SAC"] * P_SAC) + (sigma["MTP_index"] * user.MTP)
+
+	// 先验概率
+	P_X := (gateway.GASF / gateway.GAC) * (gateway.GACSF / gateway.GACC) * f_RL
+	P_theta_minus := gateway.GRR
+	if user.HBHR != 0 {
+		P_theta_minus = user.HBHR
+	}
+
+	// 风险值计算
+	R_U_minus := (P_X_given_theta_minus * P_theta_minus) / (P_X * riskBoost)
+	R_U_minus = 1 / (1 + math.Exp(-R_U_minus))
+
+	return R_U_minus
+}
+
+// 计算行为分数
+func (t *SimpleChaincode) calculateBehaviorScores(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	scores := (alpha*reputations - beta*risks) * 10
+	scores = math.Max(0.0, math.Min(scores, 1.0))
+	smoothedBehaviorScore := 0.8*user.behaviorScore + 0.2*scores
+	return smoothedBehaviorScore
+}
+
+// 计算网关值
+func (t *SimpleChaincode) calculateGatewayValues(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	reputation := (user.ACF*user.HBHS + gateway.UserNum*gateway.GRV) / (user.ACF + gateway.UserNum)
+	reputation = 1 / (1 + math.Exp(-reputation))
+
+	risk := (user.ACF*user.HBHR + gateway.UserNum*gateway.GRR) / (user.ACF + gateway.UserNum)
+	risk = 0.5 / (1 + math.Exp(-risk))
+
+	return shim.Success(reputation, risk)
+}
+
+// 更新用户状态
+func (t *SimpleChaincode) updateUserStats(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	// 示例：初始化用户和网关数据
+	user := User{
+		ACF:           0.6,
+		HBHS:          0.8,
+		HBHR:          0.3,
+		behaviorScore: 0.7,
+		CAPL:          15,
+		CARL:          20,
+		SACF:          0.5,
+		MTP:           0.2,
+	}
+
+	gateway := Gateway{
+		GACC:    10,
+		UserNum: 1000,
+		GRV:     0.7,
+		GRR:     0.4,
+	}
+
+	delta := map[string]float64{"P_AS": 0.3, "P_ACS": 0.2, "P_LAF": 0.1, "f_RL1": 0.4}
+	sigma := map[string]float64{"P_AF": 0.3, "P_ACF": 0.2, "f_RL2": 0.4, "P_SAC": 0.1, "MTP_index": 0.5}
+
+	// 计算信誉值、风险值
+	user.HBHS = calculateReputation(user, gateway, delta)
+	user.HBHR = calculateRisk(user, gateway, sigma)
+
+	// 计算行为分数
+	behaviorScoreNew := calculateBehaviorScores(user, user.HBHS, user.HBHR, 0.5, 0.5)
+	user.behaviorScore = behaviorScoreNew
+
+	// 更新网关值
+	gateway.GACC += 1
+	gateway.GRV, gateway.GRR = calculateGatewayValues(user, gateway)
+
+	return shim.Success(user, gateway)
+}
+
+// 更新用户访问等级
+func (t *SimpleChaincode) updateCapl(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	// 示例：初始化用户和网关数据
+	user := User{
+		ACF:           0.6,
+		HBHS:          0.8,
+		HBHR:          0.3,
+		behaviorScore: 0.7,
+		CAPL:          15,
+		CARL:          20,
+		SACF:          0.5,
+		MTP:           0.2,
+	}
+
+	// 确定当前 CAPL 的范围区间
+	caplRanges := [][2]int{{0, 9}, {10, 19}, {20, 29}}
+	var caplNew float64
+	for _, r := range caplRanges {
+		if float64(r[0]) <= user.CAPL && user.CAPL <= float64(r[1]) {
+			caplNew = user.CAPL
+			break
+		}
+	}
+
+	// 计算评分变化
+	behaviorScoreChange := user.behaviorScore - behaviorScoreOld
+
+	// 根据评分变化调整权限
+	if math.Abs(behaviorScoreChange) >= 0.05 {
+		if behaviorScoreChange > 0 {
+			caplNew = user.CAPL + 1
+		} else {
+			caplNew = user.CAPL - 1
+		}
+	} else if math.Floor(user.CARL/10) > math.Floor(user.CAPL/10) {
+		caplNew = user.CAPL - 10
+	} else {
+		caplNew = user.CAPL
+	}
+
+	// 检查其他调整条件
+	if user.MTP > 0.1 {
+		caplNew -= 1
+	}
+	if user.SACF/user.ACF > 0.05 && user.SACF != 1 {
+		caplNew -= 1
+	}
+
+	// 限制权限级别在当前区间范围内
+	for _, r := range caplRanges {
+		caplNew = math.Max(float64(r[0]), math.Min(caplNew, float64(r[1])))
+	}
+
+	return caplNew
 }
 
 func main() {
