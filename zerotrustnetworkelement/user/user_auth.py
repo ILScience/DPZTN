@@ -13,7 +13,7 @@ def load_auth_key(user_id):
         gateway_public_key = load_key_from_file("pk_gateway", user_folder_path)  # 加载网关公钥
         aes_key_to_gateway = generate_aes_key(user_private_key, gateway_public_key)  # 生成会话密钥
         format_and_print('2.1.Key loaded successfully', '-', 'center')
-        return user_private_key, gateway_public_key, aes_key_to_gateway
+        return aes_key_to_gateway
     except Exception as e:
         format_and_print(f'2.1.Error in load_auth_key():{str(e)}')
 
@@ -97,7 +97,7 @@ def user_auth(user_socket, user_id):
         send_with_header(user_socket, b"USER AUTHENTICATION")  # 发送消息类型
         send_with_header(user_socket, convert_message(f"{user_id}", 'bytes'))  # 发送uid
         # 2.1.获取认证过程中使用的公钥
-        client_private_key, server_public_key, aes_key = load_auth_key(user_id)
+        aes_key = load_auth_key(user_id)
         # 零知识认证
         # 2.2.输入新的用户身份属性信息
         client_hash_info_new = user_info_generate()  # 获取网关身份信息

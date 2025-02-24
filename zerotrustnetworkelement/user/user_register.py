@@ -6,11 +6,11 @@ from zerotrustnetworkelement.function import *
 
 
 # 1.1.获取用户身份属性信息
-def user_info_generate():
+def user_info_generate(salt):
     format_and_print('1.1.Querying user information', '.')
     try:
         ip, client_info = get_network_info()  # 生成用户属性信息
-        user_name = 'ip707'
+        user_name = 'ip707_' + salt
         user_password = '123456'
         user_info = f'{client_info}||{user_name}||{user_password}'
         user_hash_info = hash_encrypt(user_info)
@@ -121,13 +121,13 @@ def save_user_keys(user_id, user_public_key, user_private_key, user_verify_key, 
 
 
 # 1.网关身份注册流程
-def user_reg(user_socket):
+def user_reg(user_socket,salt):
     format_and_print('1.Starting the Identity Enrollment Process', ':', 'left')
     try:
         # 发送消息类型
         send_with_header(user_socket, b"USER REGISTRATION")
         # 1.1.获取用户身份属性信息
-        user_hash_info = user_info_generate()
+        user_hash_info = user_info_generate(salt)
         # 1.2.生成用户ecc密钥
         user_private_key, user_public_key, user_sign_key, user_verify_key, ecc = generate_user_key()
         # 1.3.交换公钥

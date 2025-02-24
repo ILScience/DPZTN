@@ -1,4 +1,6 @@
 import threading
+import time
+
 import psutil
 import socket
 from zerotrustnetworkelement.gateway.gw_configure import *
@@ -6,6 +8,7 @@ from zerotrustnetworkelement.gateway.gw_register import *
 from zerotrustnetworkelement.gateway.gw_auth import *
 from zerotrustnetworkelement.gateway.user_register import *
 from zerotrustnetworkelement.gateway.user_auth import *
+from zerotrustnetworkelement.gateway.user_access import *
 
 
 # 1.网关注册
@@ -91,6 +94,13 @@ def user_main(gw_socket, gw_id):
                         time_dict4 = {'tt_u4': tt_u4, 'tt_u5': tt_u5, 'tt_u6': tt_u6, 'tt_b2': tt_b2, 'tt_b3': tt_b3,
                                       'tt_b4': tt_b4, 'user_auth_duration': user_auth_duration}
                         append_to_json(user_id, time_dict4)
+
+                    elif request_type == b'USER ACCESS':
+                        user_id = user_access(gw_socket,gw_id)
+                        access_end_time = get_timestamp()
+                        user_access_duration = access_end_time - request_start_time
+                        time_dict5 = {'user_access_duration': user_access_duration}
+                        append_to_json(user_id, time_dict5)
 
 
                 except KeyboardInterrupt:

@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"strconv"
 	"time"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -14,19 +16,27 @@ type SimpleChaincode struct{}
 
 // GWInfo 网关身份信息定义
 type GWInfo struct {
-	GID            string
-	BcPk           string
-	BcSigPk        string
-	GwPk           string
-	GwSigPk        string
-	GwHashInfo     string
-	GwState        string
-	GwRegTimes     int
-	GwRegSucTimes  int
-	GwRegTS        string
-	GwAuthTimes    int
-	GwAuthSucTimes int
-	GwAuthTS       string
+	GID                string
+	BcPk               string
+	BcSigPk            string
+	GwPk               string
+	GwSigPk            string
+	GwHashInfo         string
+	GwState            string
+	GwRegTimes         int
+	GwRegSucTimes      int
+	GwRegTS            string
+	GwAuthTimes        int
+	GwAuthSucTimes     int
+	GwAuthTS           string
+	UAuthTimes         int
+	UAuthSucTimes      int
+	UserAccessTimes    int
+	UserAccessSucTimes int
+	AccessUserNumber   int
+	GReputation        float64
+	GRisk              float64
+	FL                 float64
 }
 
 // 用户身份信息
@@ -45,10 +55,18 @@ type UInfo struct {
 	UAuthTimes     int
 	UAuthSucTimes  int
 	UAuthTS        string
-	AccessLevel    int
 	AccessTimes    int
 	AccessSucTimes int
+	LegalAccTimes  int
 	AccessTS       string
+
+	UserRole          string
+	UserLevel         int
+	UserMaliciousness float64
+	UserPrivilege     int
+	UserReputation    float64
+	UserRisk          float64
+	UserBHScore       float64
 }
 
 // 获取当前时间字符串
@@ -59,6 +77,17 @@ func getTime() string {
 	time_unix := time.Unix(time_stamp, 0)
 	time_string := time_unix.Format("2006/01/02 15:04:05") //把纳秒转化为时间字符串
 	return time_string
+}
+
+func parseTimeToUnix(timeString string) int64 {
+	// 解析时间字符串为 time.Time 类型
+	t, err := time.Parse("2006/01/02 15:04:05", timeString)
+	if err != nil {
+		fmt.Println("Error parsing time:", err)
+		return 0
+	}
+	// 返回对应的 Unix 时间戳（单位秒）
+	return t.Unix()
 }
 
 // 初始化链码
@@ -359,6 +388,9 @@ func (t *SimpleChaincode) update_gid_auth_state(stub shim.ChaincodeStubInterface
 	gateway.GwAuthTS = getTime()
 	gateway.GwAuthTimes = 1
 	gateway.GwAuthSucTimes = 1
+	gateway.GReputation = 100
+	gateway.GRisk = 0
+	gateway.AccessUserNumber = 0
 
 	gatewayJson, err := json.Marshal(gateway)
 	if err != nil {
@@ -440,7 +472,6 @@ func (t *SimpleChaincode) register_uid(stub shim.ChaincodeStubInterface, args []
 	user.AccessTimes = 0
 	user.AccessSucTimes = 0
 	user.AccessTS = "False"
-	user.AccessLevel = 0
 
 	userJson, err := json.Marshal(user)
 	if err != nil {
@@ -600,6 +631,128 @@ func (t *SimpleChaincode) update_uid_auth_state(stub shim.ChaincodeStubInterface
 	}
 	ret := string(userJson) + "+++ TransactionID: " + stub.GetTxID()
 	return shim.Success([]byte(ret))
+
+}
+
+//14.查询用户资源
+func (t *SimpleChaincode) update_user_mark(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 1")
+	}
+
+	var err error
+	var user UInfo
+	var gateway GWInfo
+
+	// 获取 GID
+	uid := args[0]
+	userRole := args[1]
+	queryResource := strconv.Atoi(args[2])
+
+	userData, err := stub.GetState(uid)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to get user data for UID %s: %s", uid, err))
+	}
+	if userData == nil {
+		return shim.Error(fmt.Sprintf("No registered for UID %s", uid))
+	}
+	err = json.Unmarshal(userData, &user)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to unmarshal user data: %s", err))
+	}
+
+	gatewayData, err := stub.GetState(user.GID)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to get gateway data for UID %s: %s", uid, err))
+	}
+	if gatewayData == nil {
+		return shim.Error(fmt.Sprintf("No registered for UID %s", uid))
+	}
+	err = json.Unmarshal(gatewayData, &gateway)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("Failed to unmarshal gateway data: %s", err))
+	}
+
+	if user.UserRole == "" {
+		user.UserRole = userRole
+		if user.UserRole == "Regular User" {
+			user.UserPrivilege = 0
+			user.UserLevel = 5
+		} else if user.UserRole == "Premium User" {
+			user.UserPrivilege = 10
+			user.UserLevel = 5
+		} else if user.UserRole == "Administrator" {
+			user.UserPrivilege = 20
+			user.UserLevel = 5
+		} else {
+			return shim.Error("Invalid user role.")
+		}
+	} else if user.UserRole != userRole {
+		return shim.Error("User role mismatch")
+	}
+	//计算网关连接的用户数量，判断用户是否是新连接的
+	if user.UserRole == "" {
+		gateway.AccessUserNumber = gateway.AccessUserNumber + 1
+		//计算用户信誉值
+		pf := gateway.GReputation / 100
+		pas := (gateway.UAuthSucTimes / gateway.GwAuthTimes) * (user.UAuthSucTimes / user.AccessSucTimes)
+		pacs := (gateway.UserAccessSucTimes / gateway.UserAccessTimes) * (user.AccessSucTimes / user.AccessTimes)
+		plaf := user.LegalAccTimes / user.AccessTimes
+		var frl float64
+		if queryResource > 30 || queryResource < 0 {
+			return shim.Error("No resources")
+		} else if queryResource > (user.UserPrivilege + user.UserLevel) {
+			frl = 1
+		} else {
+			frl = math.Floor(float64(1 - ((queryResource - user.UserPrivilege + user.UserLevel) / queryResource)))
+		}
+		pb := math.Pow(float64(pas), 2) * math.Pow(float64(pacs), 3) * math.Pow(float64(plaf), 2) * math.Pow(frl, 3)
+		px := float64(gateway.UAuthSucTimes/gateway.GwAuthTimes) * float64(gateway.UserAccessSucTimes/gateway.UserAccessTimes) * ((float64(gateway.AccessUserNumber-1)*gateway.FL + frl) / float64(gateway.AccessUserNumber))
+		user.UserReputation = pb * pf / px
+		//计算用户风险值
+		pff := gateway.GRisk / 100
+		paf := float64(1 - user.UAuthSucTimes/user.UAuthTimes)
+		pacf := float64(1 - user.AccessSucTimes/user.AccessTimes)
+		psac := float64(user.AccessTimes-user.LegalAccTimes) / float64(parseTimeToUnix(getTime())-parseTimeToUnix(user.AccessTS))
+		pbf := 0.2 * (paf + pacf + psac + frl)
+		user.UserRisk = pbf * pff / px
+		//计算用户行为分数
+		user.UserBHScore = user.UserReputation - user.UserRisk
+
+	} else {
+		uLevelHist := user.UserLevel
+		pf := (user.UserReputation - user.UserRisk) / user.UserReputation
+		pas := (gateway.UAuthSucTimes / gateway.GwAuthTimes) * (user.UAuthSucTimes / user.AccessSucTimes)
+		pacs := (gateway.UserAccessSucTimes / gateway.UserAccessTimes) * (user.AccessSucTimes / user.AccessTimes)
+		plaf := user.LegalAccTimes / user.AccessTimes
+		var frl float64
+		if queryResource > 30 || queryResource < 0 {
+			return shim.Error("No resources")
+		} else if queryResource > (user.UserPrivilege + user.UserLevel) {
+			frl = 1
+		} else {
+			frl = math.Floor(float64(1 - ((queryResource - user.UserPrivilege + user.UserLevel) / queryResource)))
+		}
+		pb := math.Pow(float64(pas), 2) * math.Pow(float64(pacs), 3) * math.Pow(float64(plaf), 2) * math.Pow(frl, 3)
+		px := float64(gateway.UAuthSucTimes/gateway.GwAuthTimes) * float64(gateway.UserAccessSucTimes/gateway.UserAccessTimes) * ((float64(gateway.AccessUserNumber-1)*gateway.FL + frl) / float64(gateway.AccessUserNumber))
+		user.UserReputation = pb * pf / px
+		//计算用户风险值
+		pff := user.UserRisk / 100
+		paf := float64(1 - user.UAuthSucTimes/user.UAuthTimes)
+		pacf := float64(1 - user.AccessSucTimes/user.AccessTimes)
+		psac := float64(user.AccessTimes-user.LegalAccTimes) / float64(parseTimeToUnix(getTime())-parseTimeToUnix(user.AccessTS))
+		pbf := 0.2 * (paf + pacf + psac + frl)
+		user.UserRisk = pbf * pff / px
+		user.UserBHScore = user.UserReputation - user.UserRisk
+
+		//调整用户等级
+		if user.UserBHScore < 60 {
+			return shim.Error("User bh score is less than 60")
+		} else if math.Abs(user.UserBHScore-float64(uLevelHist)) > 1 {
+			user.UserLevel = math.Min(user.UserPrivilege+10, math.Max(user.UserPrivilege, uLevelHist+0.5*(user.UserBHScore-uLevelHist)))
+		}
+	}
 
 }
 

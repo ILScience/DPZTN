@@ -193,3 +193,42 @@ def query_user_pk(loop, cli, org, ip, uid):
     ))
     print(response)
     return response
+
+
+###################################
+
+def query_resource(loop, cli, org, ip, uid, role, resource):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[str(uid), str(role), str(resource)],
+        cc_name='ztne',
+        fcn='query_user_privilege'
+    ))
+    print(response)
+    return response
+
+def query_gid_mark(loop, cli, org, ip, gid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[str(gid)],
+        cc_name='ztne',
+        fcn='query_user_privilege'
+    ))
+    print(response)
+    return response
+
+def query_uid_mark(loop, cli, org, ip, uid):
+    response = loop.run_until_complete(cli.chaincode_invoke(
+        requestor=org,
+        channel_name='mychannel',
+        peers=[ip_peer_map[ip]],
+        args=[str(uid)],
+        cc_name='ztne',
+        fcn='query_user_privilege'
+    ))
+    print(response)
+    return response

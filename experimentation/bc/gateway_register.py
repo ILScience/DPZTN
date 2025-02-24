@@ -7,6 +7,7 @@ import threading
 import psutil
 from zerotrustnetworkelement.blockchain.user_register import *
 from zerotrustnetworkelement.blockchain.user_auth import *
+from zerotrustnetworkelement.blockchain.user_access import *
 
 
 def gateway_main():
@@ -15,7 +16,7 @@ def gateway_main():
     # 与网关建立连接
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((bc_ip, bc_port))
-    server_socket.listen(5)
+    server_socket.listen(1000)
     format_and_print(f'blockchain server listening on {bc_ip}:{bc_port}', '.')
     while True:
         try:
@@ -45,6 +46,8 @@ def gateway_main():
                     format_and_print(f'Received message type: {request_type}', '-', 'center')
                     # 如果接收到网关身份认证请求
                     if request_type == b"GATEWAY AUTHENTICATION":
+                        time.sleep(5)
+                        print("Waiting blockchain uploading gateway information")
                         gid, tt4, tt5, tt6 = gw_auth(gw_socket, loop, cli, org_admin, bc_ip)
                         auth_end_time = get_timestamp()
                         auth_duration = auth_end_time - request_start_time
@@ -52,6 +55,8 @@ def gateway_main():
                         append_to_json(gid, time_dict2)
                         # 如果接收到用户注册请求
                     elif request_type == b"USER REGISTRATION":
+                        time.sleep(5)
+                        print("Waiting blockchain uploading gateway information")
                         user_id, tt8, tt9, tt10, tt11, tt12, tt13 = user_register(gw_socket, loop, cli, org_admin,
                                                                                   bc_ip)
                         register_end_time = get_timestamp()
@@ -61,10 +66,21 @@ def gateway_main():
                         append_to_json(user_id, time_dict4)
 
                     elif request_type == b'USER AUTHENTICATION':
+                        time.sleep(5)
+                        print("Waiting blockchain uploading gateway information")
                         user_id, tt9, tt10, tt11 = user_auth(gw_socket, loop, cli, org_admin, bc_ip)
                         auth_end_time = get_timestamp()
                         user_auth_duration = auth_end_time - request_start_time
                         time_dict5 = {'tt9': tt9, 'tt10': tt10, 'tt11': tt11, 'user_auth_duration': user_auth_duration}
+                        append_to_json(user_id, time_dict5)
+
+                    elif request_type == b'USER ACCESS':
+                        time.sleep(5)
+                        print("Waiting blockchain uploading gateway information")
+                        user_id = user_access(gw_socket, loop, cli, org_admin, bc_ip)
+                        access_end_time = get_timestamp()
+                        user_access_duration = access_end_time - request_start_time
+                        time_dict5 = {'user_access_duration': user_access_duration}
                         append_to_json(user_id, time_dict5)
 
         except KeyboardInterrupt:
