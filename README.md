@@ -299,3 +299,6 @@ This repository is intended for authorized research and testing environments onl
 Do not run the malicious traffic scripts against public networks, third-party systems, or infrastructure without explicit authorization.
 
 Remove hard-coded credentials, test keys, certificates, and network addresses before deployment.
+
+
+The research associated with this project has been published as “DPZTN: Data-Plane-Based Access Control Zero-Trust Network” in Computer Systems Science and Engineering.
