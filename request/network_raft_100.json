@@ -1,0 +1,271 @@
+{
+  "name": "sample-network",
+  "description": "Sample network contains 9 peers (3 orgs), 3 orderer for Python SDK testing",
+  "version": "0.1",
+  "client": {
+    "organization": "Org1",
+    "credentialStore": {
+      "path": "/tmp/hfc-kvs",
+      "cryptoStore": {
+        "path": "/tmp/hfc-cvs"
+      },
+      "wallet": "wallet-name"
+    }
+  },
+  "organizations": {
+    "orderer.example.com": {
+      "mspid": "OrdererMSP",
+      "orderers": [
+        "orderer0.example.com",
+        "orderer1.example.com",
+        "orderer2.example.com"
+      ],
+      "certificateAuthorities": [
+        "ca-orderer"
+      ],
+      "users": {
+        "Admin": {
+          "cert": "crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/signcerts/Admin@example.com-cert.pem",
+          "private_key": "crypto-config/ordererOrganizations/example.com/users/Admin@example.com/msp/keystore/639b31738cfccfc86250076e832a27f8cc14cbb5faa7370db1572385f8f5526b_sk"
+        }
+      }
+    },
+    "org1.example.com": {
+      "mspid": "Org1MSP",
+      "peers": [
+        "peer0.org1.example.com",
+        "peer1.org1.example.com",
+        "peer2.org1.example.com"
+      ],
+      "certificateAuthorities": [
+        "ca-org1"
+      ],
+      "users": {
+        "Admin": {
+          "cert": "crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/signcerts/Admin@org1.example.com-cert.pem",
+          "private_key": "crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/keystore/566e899a5b063a3b6028733daa87fb9ab12b686ce81cd4196b15c6d6230293fc_sk"
+        },
+        "User1": {
+          "cert": "crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/User1@org1.example.com-cert.pem",
+          "private_key": "crypto-config/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/afc191fe3250d15602decb147103bc579b3db222d5e787ac571c91541cfe4c8e_sk"
+        }
+      }
+    },
+    "org2.example.com": {
+      "mspid": "Org2MSP",
+      "peers": [
+        "peer0.org2.example.com",
+        "peer1.org2.example.com",
+        "peer2.org2.example.com"
+      ],
+      "certificateAuthorities": [
+        "ca-org2"
+      ],
+      "users": {
+        "Admin": {
+          "cert": "crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/signcerts/Admin@org2.example.com-cert.pem",
+          "private_key": "crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/keystore/46795feca5462fb3ff80c172441bcff48799310e092fe98df335f214e349b523_sk"
+        },
+        "User1": {
+          "cert": "crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem",
+          "private_key": "crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/keystore/9fee7ab602127a8ca0710fae750995cbc9ba3c54c9ba1ab9d10c3136ab52e08c_sk"
+        }
+      }
+    },
+    "org3.example.com": {
+      "mspid": "Org3MSP",
+      "peers": [
+        "peer0.org3.example.com",
+        "peer1.org3.example.com",
+        "peer2.org3.example.com"
+      ],
+      "certificateAuthorities": [
+        "ca-org3"
+      ],
+      "users": {
+        "Admin": {
+          "cert": "crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/signcerts/Admin@org3.example.com-cert.pem",
+          "private_key": "crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp/keystore/536b0c2fd20dc393c42d22111f4e7fa2fc3eb0f6b911853c44063770dc59528b_sk"
+        },
+        "User1": {
+          "cert": "crypto-config/peerOrganizations/org3.example.com/users/User1@org3.example.com/msp/signcerts/User1@org3.example.com-cert.pem",
+          "private_key": "crypto-config/peerOrganizations/org3.example.com/users/User1@org3.example.com/msp/keystore/748e82da950bfdabb2588cd618e668dbff36a0971e4f9d74586e3d6837f8891c_sk"
+        }
+      }
+    }
+  },
+  "orderers": {
+    "orderer0.example.com": {
+      "url": "orderer0.example.com:7050",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "orderer0.example.com",
+        "grpc-max-send-message-length": 15
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/ordererOrganizations/example.com/orderers/orderer0.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+      }
+    },
+    "orderer1.example.com": {
+      "url": "orderer1.example.com:7050",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "orderer1.example.com",
+        "grpc-max-send-message-length": 15
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/ordererOrganizations/example.com/orderers/orderer1.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+      }
+    },
+    "orderer2.example.com": {
+      "url": "orderer2.example.com:7050",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "orderer2.example.com",
+        "grpc-max-send-message-length": 15
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/ordererOrganizations/example.com/orderers/orderer2.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+      }
+    }
+  },
+  "peers": {
+    "peer0.org1.example.com": {
+      "url": "peer0.org1.example.com:7051",
+      "eventUrl": "peer0.org1.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer0.org1.example.com",
+        "grpc.http2.keepalive_time": 15
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem"
+      }
+    },
+    "peer1.org1.example.com": {
+      "url": "peer1.org1.example.com:7051",
+      "eventUrl": "peer1.org1.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer1.org1.example.com"
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem"
+      }
+    },
+    "peer2.org1.example.com": {
+      "url": "peer2.org1.example.com:7051",
+      "eventUrl": "peer2.org1.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer2.org1.example.com"
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem"
+      }
+    },
+    "peer0.org2.example.com": {
+      "url": "peer0.org2.example.com:7051",
+      "eventUrl": "peer0.org2.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer0.org2.example.com",
+        "grpc.http2.keepalive_time": 15
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem"
+      }
+    },
+    "peer1.org2.example.com": {
+      "url": "peer1.org2.example.com:7051",
+      "eventUrl": "peer1.org2.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer1.org2.example.com"
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem"
+      }
+    },
+    "peer2.org2.example.com": {
+      "url": "peer2.org2.example.com:7051",
+      "eventUrl": "peer2.org2.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer2.org2.example.com"
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org2.example.com/peers/peer2.org2.example.com/msp/tlscacerts/tlsca.org2.example.com-cert.pem"
+      }
+    },
+    "peer0.org3.example.com": {
+      "url": "peer0.org3.example.com:7051",
+      "eventUrl": "peer0.org3.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer0.org3.example.com",
+        "grpc.http2.keepalive_time": 15
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/msp/tlscacerts/tlsca.org3.example.com-cert.pem"
+      }
+    },
+    "peer1.org3.example.com": {
+      "url": "peer1.org3.example.com:7051",
+      "eventUrl": "peer1.org3.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer1.org3.example.com"
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org3.example.com/peers/peer1.org3.example.com/msp/tlscacerts/tlsca.org3.example.com-cert.pem"
+      }
+    },
+    "peer2.org3.example.com": {
+      "url": "peer2.org3.example.com:7051",
+      "eventUrl": "peer2.org3.example.com:7053",
+      "grpcOptions": {
+        "grpc.ssl_target_name_override": "peer2.org3.example.com"
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org3.example.com/peers/peer2.org3.example.com/msp/tlscacerts/tlsca.org3.example.com-cert.pem"
+      }
+    }
+  },
+  "certificateAuthorities": {
+    "ca-org1": {
+      "url": "https://localhost:7054",
+      "grpcOptions": {
+        "verify": true
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org1.example.com/ca/org1.example.com-cert.pem"
+      },
+      "registrar": [
+        {
+          "enrollId": "admin",
+          "enrollSecret": "adminpw"
+        }
+      ]
+    },
+    "ca-org2": {
+      "url": "https://localhost:8054",
+      "grpcOptions": {
+        "verify": true
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org2.example.com/ca/org2.example.com-cert.pem"
+      },
+      "registrar": [
+        {
+          "enrollId": "admin",
+          "enrollSecret": "adminpw"
+        }
+      ]
+    },
+    "ca-org3": {
+      "url": "https://localhost:9054",
+      "grpcOptions": {
+        "verify": true
+      },
+      "tlsCACerts": {
+        "path": "crypto-config/peerOrganizations/org3.example.com/ca/org3.example.com-cert.pem"
+      },
+      "registrar": [
+        {
+          "enrollId": "admin",
+          "enrollSecret": "adminpw"
+        }
+      ]
+    }
+  }
+}
